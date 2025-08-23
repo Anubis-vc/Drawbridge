@@ -5,7 +5,7 @@ import numpy as np
 from numpy.linalg import norm
 from insightface.app import FaceAnalysis
 import argparse
-
+from liveness import Liveness
 
 # allowing usage of small model during dev since i don't have a gpu yet
 if __name__ == "__main__":
@@ -42,6 +42,10 @@ if __name__ == "__main__":
         min_detection_confidence=0.7,
         min_tracking_confidence=0.7,
     )
+    
+    
+    # init liveness detection 
+    liveness = Liveness()
 
 
     # init video capture and get lower res for faster processing
@@ -57,12 +61,14 @@ if __name__ == "__main__":
     font_scale = 1
     GREEN = (0, 255, 0)
     RED = (0, 0, 255)
+    YELLOW = (0, 255, 255)
     font_thickness = 2
 
 
     # vars to help with verification and tracking
     verified = False
     name = "Unknown"
+    liveness_checked = False
 
 
     while cap.isOpened():
@@ -79,36 +85,7 @@ if __name__ == "__main__":
 
         if results.multi_face_landmarks:
             for landmarks in results.multi_face_landmarks:
-                # https://mediapipe.readthedocs.io/en/latest/solutions/face_mesh.html
-                # TODO: use mediapipe landmarks to implement liveness detection
-
-                # get bounding coordinates for framing
-                img_height, img_width, _ = frame.shape
-                # taking [0,1] normalized coordinates and finding the bounding box
-                x_coords = [int(lm.x * img_width) for lm in landmarks.landmark]
-                y_coords = [int(lm.y * img_height) for lm in landmarks.landmark]
-                x1, y1, x2, y2 = (
-                    max(min(x_coords) - 15, 0),
-                    max(min(y_coords) - 15, 0),
-                    min(max(x_coords) + 15, img_width),
-                    min(max(y_coords), img_height),
-                )
-
-                # draw frame and show text
-                cv2.rectangle(frame, (x1, y1), (x2, y2), GREEN if verified else RED, 2)
-                (text_width, text_height), baseline = cv2.getTextSize(
-                    name, font, font_scale, font_thickness
-                )
-                cv2.putText(
-                    frame,
-                    name,
-                    ((x1 + x2 - text_width) // 2, y2 + text_height + 15),
-                    font,
-                    font_scale,
-                    GREEN if verified else RED,
-                    font_thickness,
-                )
-
+                
                 # get embeddings from image
                 faces = app.get(frame)
 
@@ -120,16 +97,69 @@ if __name__ == "__main__":
                     best_score = -1
                     for db_name, db_embedding in face_db.items():
                         score = cosine_similarity(embedding, db_embedding)
-                        if score > 0.5 and score > best_score:
+                        if score > 0.6 and score > best_score:
                             best_match = db_name
                             best_score = score
                             verified = True
                             name = db_name
+                
+                # https://mediapipe.readthedocs.io/en/latest/solutions/face_mesh.html
+                # get bounding coordinates for framing and liveness detection
+                img_height, img_width, _ = frame.shape
+                # need pixel values to pass to liveness detection, mediapipe returns "normalized landmarks"
+                landmarks_dict = {}
+                x1, y1, x2, y2 = img_width, img_height, 0, 0
+                for i, lm in enumerate(landmarks.landmark):
+                    x = int(lm.x * img_width)
+                    y = int(lm.y * img_height)
+                    landmarks_dict[i] = (x, y)
+                    x1 = min(x1, x)
+                    y1 = min(y1, y)
+                    x2 = max(x2, x)
+                    y2 = max(y2, y)
+                    
+                x1, y1, x2, y2 = (
+                    max(x1 - 15, 0),
+                    max(y1 - 15, 0),
+                    min(x2 + 15, img_width),
+                    min(y2 + 15, img_height),
+                )
+                
+                liveness_checked = liveness.calculate_liveness(landmarks_dict)
+
+                # Determine frame color based on verification and liveness
+                if verified and liveness_checked:
+                    frame_color = GREEN
+                    status_text = f"{name} Blinks: {liveness.total_blinks}"
+                elif verified and not liveness_checked:
+                    frame_color = YELLOW
+                    status_text = f"{name} Blinks: {liveness.total_blinks}"
+                else:
+                    frame_color = RED
+                    status_text = "Unknown"
+
+                # draw frame and show text
+                cv2.rectangle(frame, (x1, y1), (x2, y2), frame_color, 2)
+                
+                # Display name/status
+                (text_width, text_height), baseline = cv2.getTextSize(
+                    status_text, font, font_scale, font_thickness
+                )
+                cv2.putText(
+                    frame,
+                    status_text,
+                    ((x1 + x2 - text_width) // 2, y2 + text_height + 15),
+                    font,
+                    font_scale,
+                    frame_color,
+                    font_thickness,
+                )
             
         # reset flags and names if face disappears
         else:
             verified = False
             name = "Unknown"
+            liveness.reset()
             
 
         cv2.imshow("Face Detection Mesh", frame)
