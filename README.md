@@ -1,0 +1,1 @@
+For the loaded images, be careful with jpegs. Depending on where you download them from they can be super lossy, I had much better success using pngs.
