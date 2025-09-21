@@ -1,3 +1,3 @@
-from utils.access_level import AccessLevel
+from utils.enums import AccessLevel, NotificationStatus
 
-__all__ = ["AccessLevel"]
+__all__ = ["AccessLevel", "NotificationStatus"]

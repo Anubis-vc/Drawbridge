@@ -1,6 +1,7 @@
-from notifications.notifcation import NotificationService
-from utils.access_level import AccessLevel
+from notifications.notification import NotificationService
+from notifications.notification_util import build_message
 from twilio.rest import Client
+from utils.enums import NotificationStatus
 import os
 from dotenv import load_dotenv
 
@@ -21,20 +22,21 @@ class SMSService(NotificationService):
         )
         return response
 
-    def send_notification(self, name, access_level):
-        if access_level == AccessLevel.ADMIN or AccessLevel.FAMILY:
-            message = f"{name} is entering the building"
-        elif access_level == AccessLevel.FRIEND:
-            message = f"{name} is at the door"
-        else:
-            # TODO: Take picture of unknown person
-            message = "An unknown person is attempting to enter the building"
+    def send_notification(self, name, access_level) -> NotificationStatus:
+        try:
+            message = build_message(name, access_level)
+            response = self.__create_message(message)
 
-        response = self.__create_message(message)
-        return response.error_code if response.error_code else 200
-
-
-if __name__ == "__main__":
-    noti_service = SMSService()
-    result = noti_service.send_notification("Ved", AccessLevel.ADMIN)
-    print(result)
+            if response.error_code:
+                # Map Twilio error codes to our enum
+                if response.error_code in [20003, 20005]:  # Authentication errors
+                    return NotificationStatus.INVALID_CREDENTIALS
+                elif response.error_code in [21610, 21614]:  # Rate limiting
+                    return NotificationStatus.RATE_LIMITED
+                else:
+                    return NotificationStatus.FAILED
+            else:
+                return NotificationStatus.SUCCESS
+        except Exception as e:
+            print(f"SMS sending error: {e}")
+            return NotificationStatus.UNKNOWN_ERROR

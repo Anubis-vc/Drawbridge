@@ -211,3 +211,6 @@ __marimo__/
 *known_images
 *.pkl
 test/
+
+*credentials.json
+*token.json
