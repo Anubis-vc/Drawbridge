@@ -1,11 +1,10 @@
+from face_recognition.liveness import Liveness
+from face_recognition.face_recognizer import FaceRecognizer
+# TODO: import and configure notifications
+
 import cv2
 import mediapipe as mp
-import pickle
-import numpy as np
-from numpy.linalg import norm
-from insightface.app import FaceAnalysis
 import argparse
-from liveness import Liveness
 
 # allowing usage of small model during dev since i don't have a gpu yet
 if __name__ == "__main__":
@@ -15,21 +14,11 @@ if __name__ == "__main__":
 
     model = "buffalo_s" if args.small else "buffalo_l"
     print(f"Using model {model}")
-
-
-    # load the embeddings
-    with open("face_db.pkl" if not args.small else "face_db_small.pkl", "rb") as f:
-        face_db = pickle.load(f)
-
-
-    # initialize recognition things
-    def cosine_similarity(a, b):
-        return np.dot(a, b) / (norm(a) * norm(b))
-
-
-    app = FaceAnalysis(name=model, providers=["CPUExecutionProvider"])
-    app.prepare(ctx_id=0, det_size=(640, 640))
-
+    
+    
+    face_recognition = FaceRecognizer(model)
+    liveness = Liveness()
+    
 
     # init mediapipe objects for detection and drawing
     mp_face_mesh = mp.solutions.face_mesh
@@ -42,15 +31,11 @@ if __name__ == "__main__":
         min_detection_confidence=0.7,
         min_tracking_confidence=0.7,
     )
-    
-    
-    # init liveness detection 
-    liveness = Liveness()
 
 
-    # init video capture and get lower res for faster processing
+    # Process video at lower res for faster processing
     cap = cv2.VideoCapture(0)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     print(f"Width: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}")
     print(f"Height: {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
@@ -65,10 +50,9 @@ if __name__ == "__main__":
     font_thickness = 2
 
 
-    # vars to help with verification and tracking
-    verified = False
+    # vars to help with live feed
     name = "Unknown"
-    liveness_checked = False
+    face_similarity_score = -1
 
 
     while cap.isOpened():
@@ -79,29 +63,14 @@ if __name__ == "__main__":
 
         # convert to rgb for mediapipe
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-        # run through detection algorithm
+        # run through mediapipe detection algorithm
         results = face_mesh.process(rgb_frame)
 
         if results.multi_face_landmarks:
             for landmarks in results.multi_face_landmarks:
                 
-                # get embeddings from image
-                faces = app.get(frame)
-
-                for face in faces:
-                    embedding = face.embedding
-
-                    # compare against db
-                    best_match = "Unknown"
-                    best_score = -1
-                    for db_name, db_embedding in face_db.items():
-                        score = cosine_similarity(embedding, db_embedding)
-                        if score > 0.6 and score > best_score:
-                            best_match = db_name
-                            best_score = score
-                            verified = True
-                            name = db_name
+                # retrieve embedding for each face in the image
+                name, face_similarity_score = face_recognition.run_facial_recognition(frame)
                 
                 # https://mediapipe.readthedocs.io/en/latest/solutions/face_mesh.html
                 # get bounding coordinates for framing and liveness detection
@@ -112,7 +81,7 @@ if __name__ == "__main__":
                 for i, lm in enumerate(landmarks.landmark):
                     x = int(lm.x * img_width)
                     y = int(lm.y * img_height)
-                    landmarks_dict[i] = (x, y)
+                    landmarks_dict[i] = (x, y) # collecting landmarks for liveness detection
                     x1 = min(x1, x)
                     y1 = min(y1, y)
                     x2 = max(x2, x)
@@ -125,13 +94,13 @@ if __name__ == "__main__":
                     min(y2 + 15, img_height),
                 )
                 
-                liveness_checked = liveness.calculate_liveness(landmarks_dict)
+                liveness.calculate_liveness(landmarks_dict)
 
                 # Determine frame color based on verification and liveness
-                if verified and liveness_checked:
+                if face_recognition.verified and liveness.live:
                     frame_color = GREEN
                     status_text = f"{name} Blinks: {liveness.total_blinks}"
-                elif verified and not liveness_checked:
+                elif face_recognition.verified and not liveness.live:
                     frame_color = YELLOW
                     status_text = f"{name} Blinks: {liveness.total_blinks}"
                 else:
@@ -154,15 +123,14 @@ if __name__ == "__main__":
                     frame_color,
                     font_thickness,
                 )
-            
-        # reset flags and names if face disappears
-        else:
-            verified = False
+        else: # reset all verified states if face dissapears from frame
             name = "Unknown"
+            face_similarity_score = -1
+            face_recognition.reset()
             liveness.reset()
             
 
-        cv2.imshow("Face Detection Mesh", frame)
+        cv2.imshow("Face Detection", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 

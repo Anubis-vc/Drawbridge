@@ -48,8 +48,8 @@ face_mesh_contour_style = {}
 for k, v in facemesh_contour_connection_style.items():
     for connection in k:
         face_mesh_contour_style[connection] = v
-        
-        
+
+
 # helpers to clean up the code in main
 def get_tesselation_style():
     return facemesh_tesselation_style
