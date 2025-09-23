@@ -15,3 +15,18 @@ class NotificationStatus(Enum):
     RATE_LIMITED = "rate_limited"
     NETWORK_ERROR = "network_error"
     UNKNOWN_ERROR = "unknown_error"
+
+
+class OpenCvColors(Enum):
+    GREEN = (0, 255, 0)
+    RED = (0, 0, 255)
+    YELLOW = (0, 255, 255)
+    
+
+class MpColors(Enum):
+    CYAN = (255, 255, 0)
+    WHITE = (255, 255, 255)
+    RED = (0, 0, 255)
+    YELLOW = (0, 255, 255)
+    BLUE = (255, 0, 0)
+    GREEN = (0, 255, 0)

@@ -38,12 +38,13 @@ class FaceRecognizer:
             for db_name, db_embedding in self.face_db.items():
                 score = self.cosine_similarity(embedding, db_embedding)
                 print(score)
-                if (
-                    score > self.similarity_threshold and score > best_score
-                ):  # TODO: allow configurable strictness
-                    best_match = db_name
-                    best_score = score
+                if score > self.similarity_threshold:
+                    if score > best_score:
+                        best_match = db_name
+                        best_score = score
                     self.verified = True
+                else:
+                    self.verified = False
         return (best_match, best_score)
 
     def reset(self):
