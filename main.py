@@ -1,24 +1,19 @@
-from face_recognition import FaceRecognizer, Liveness, Overlay
+from face_recognition import FaceRecognizer, Overlay
+from liveness import Blink
+from config import ConfigManager
 # TODO: import and configure notifications
 
 # third party libraries
 import cv2
 import mediapipe as mp
-import argparse
+import time
 
-# allowing usage of small model during dev since i don't have a gpu yet
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-s", "--small", action="store_true")
-    args = parser.parse_args()
-
-    model = "buffalo_s" if args.small else "buffalo_l"
-    print(f"Using model {model}")
-
-    # initialize all user-defined objects required for running
-    face_recognition = FaceRecognizer(model, similarity_threshold=0.6)
-    liveness = Liveness()
-    overlay = Overlay(cv2.FONT_HERSHEY_SIMPLEX, font_scale=1, font_thickness=2)
+    config_manager = ConfigManager(config_file='./config/config.json')    
+    face_recognition = FaceRecognizer(**config_manager.config['face_recognition'])
+    liveness = Blink(**config_manager.config['blink_config'])
+    overlay = Overlay(font=cv2.FONT_HERSHEY_SIMPLEX, **config_manager.config['overlay'])
 
     # init mediapipe objects for detection
     mp_face_mesh = mp.solutions.face_mesh
@@ -35,12 +30,22 @@ if __name__ == "__main__":
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     print(f"Width: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}")
     print(f"Height: {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
-
+    
+    config_checked_time = time.time()
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             print("Failed to read frame")
             break
+        
+        # check for a config change every 5 seconds
+        if  time.time() - config_checked_time > 5:
+            if config_manager.reload_if_changed():
+                face_recognition.update_config(**config_manager.config['face_recognition'])
+                liveness.update_config(**config_manager.config['blink_config'])
+                overlay.update_config(**config_manager.config['overlay'])
+            config_checked_time = time.time()
+                
 
         # convert to rgb for mediapipe
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -77,8 +82,13 @@ if __name__ == "__main__":
                     min(x2 + 15, img_width),
                     min(y2 + 15, img_height),
                 )
-
-                liveness.calculate_liveness(landmarks_dict)
+                
+                # if the person is unknown we do not care if they are real
+                if name == "Unknown":
+                    liveness.reset()
+                else:
+                    liveness.calculate_liveness(landmarks_dict)
+                
                 overlay.draw(
                     face_recognition.verified,
                     liveness.live,

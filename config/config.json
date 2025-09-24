@@ -1,0 +1,25 @@
+{
+	"face_recognition": {
+		"model": "buffalo_s",
+		"similarity_threshold": 0.6
+	},
+	"notifications": {
+		"enabled_types": ["email"],
+		"email": {
+			"recipients": ["vchughcodes@gmail.com", "testing.code.ved@gmail.com"]
+		},
+		"sms": {
+			"recipients": ["+1234567890"]
+		}
+	},
+	"blink_config": {
+		"ear_threshold": 0.21,
+		"blink_consec_frames": 2,
+		"blinks_to_verify": 2
+	},
+	"overlay": {
+		"font_scale": 2,
+		"font_thickness": 2,
+		"mesh": false
+	}
+}

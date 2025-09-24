@@ -6,7 +6,7 @@ import mediapipe as mp
 
 
 class Overlay:
-    def __init__(self, font, font_scale, font_thickness, need_mesh: bool = False):
+    def __init__(self, font, font_scale, font_thickness, mesh: bool = False):
         self.font = font
         self.scale = font_scale
         self.thickness = font_thickness
@@ -15,7 +15,7 @@ class Overlay:
         self._THICKNESS_CONTOURS = 2
 
         # Initialize MediaPipe drawing styles
-        if need_mesh:
+        if mesh:
             self._setup_mediapipe_styles()
 
     def _setup_mediapipe_styles(self):
@@ -152,3 +152,13 @@ class Overlay:
     def _get_unverified_style(self):
         """Get unverified drawing style"""
         return DrawingSpec(color=OpenCvColors.RED.value, thickness=1)
+    
+    def update_config(self, font_scale, font_thickness, mesh: bool = False):
+        if self.scale != font_scale:
+            self.scale = font_scale
+            print("Updated font scale")
+        if self.thickness != font_thickness:
+            self.thickness = font_thickness
+            print("Updated font thickness")
+        if mesh:
+            self._setup_mediapipe_styles

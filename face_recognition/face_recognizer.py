@@ -8,8 +8,8 @@ class FaceRecognizer:
     def __init__(
         self,
         model: str,
-        providers: list[str] = ["CPUExecutionProvider"],
         similarity_threshold: float = 0.65,
+        providers: list[str] = ["CPUExecutionProvider"] # TODO: configure providers
     ):
         self.model = model
         self.providers = providers
@@ -19,11 +19,13 @@ class FaceRecognizer:
         self.app = FaceAnalysis(name=model, providers=["CPUExecutionProvider"])
         self.app.prepare(ctx_id=0, det_size=(640, 640))
 
+        self.face_db = self.__load_embeddings(model)
+    
+    def __load_embeddings(self, model):
         with open(
             "face_db.pkl" if model == "buffalo_l" else "face_db_small.pkl", "rb"
         ) as f:
-            self.face_db = pickle.load(f)  # TODO: replace eventually with vector db
-            print("loaded embeddings")
+            return pickle.load(f)  # TODO: replace eventually with vector db
 
     def cosine_similarity(self, a, b):
         return np.dot(a, b) / (norm(a) * norm(b))
@@ -37,7 +39,6 @@ class FaceRecognizer:
             embedding = face.embedding
             for db_name, db_embedding in self.face_db.items():
                 score = self.cosine_similarity(embedding, db_embedding)
-                print(score)
                 if score > self.similarity_threshold:
                     if score > best_score:
                         best_match = db_name
@@ -46,6 +47,16 @@ class FaceRecognizer:
                 else:
                     self.verified = False
         return (best_match, best_score)
+    
+    def update_config(self, model, similarity_threshold):
+        if self.model != model:
+            self.app = FaceAnalysis(name=model, providers=["CPUExecutionProvider"])
+            self.face_db = self.__load_embeddings(model)
+            print("updated model")
+        
+        if self.similarity_threshold != similarity_threshold:
+            self.similarity_threshold = similarity_threshold
+            print("updated similarity threshold")
 
     def reset(self):
         self.verified = False
