@@ -1,5 +1,4 @@
 from notifications.notification import NotificationService
-from notifications.notification_util import build_message
 from utils.enums import NotificationStatus
 
 from google.auth.transport.requests import Request
@@ -14,10 +13,12 @@ import base64
 
 
 class EmailService(NotificationService):
-    def __init__(self, user_id="me", recipient_email="vchughcodes@gmail.com"):
+    def __init__(self, user_id="me", owner="vchughcodes@gmail.com", recipients=[]):
         self.SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
         self.user_id = user_id
-        self.recipient_email = recipient_email
+        self.owner = owner
+        self.recipients = recipients
+        self.cc_string = ','.join(recipients) if recipients else None
         self.subject = "Facial Recognition Doorway"
 
     def __get_credentials(self):
@@ -50,9 +51,11 @@ class EmailService(NotificationService):
 
         message = EmailMessage()
         message.set_content(message_content)
-        message["To"] = self.recipient_email
+        message["To"] = self.owner
         message["From"] = "gduser1@workspacesamples.dev"
         message["Subject"] = self.subject
+        if self.cc_string:
+            message["cc"] = self.cc_string
 
         encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
@@ -65,9 +68,8 @@ class EmailService(NotificationService):
         )
         print(f"Message ID: {send_message['id']}")
 
-    def send_notification(self, name: str, access_level) -> NotificationStatus:
+    def send(self, message: str) -> NotificationStatus:
         try:
-            message = build_message(name, access_level)
             self.__create_email(message)
             return NotificationStatus.SUCCESS
         except HttpError as e:
@@ -81,3 +83,9 @@ class EmailService(NotificationService):
         except Exception as e:
             print(f"Email sending error: {e}")
             return NotificationStatus.UNKNOWN_ERROR
+        
+    def update_config(self, owner: str, recipients: list):
+        if self.recipients != recipients:
+            self.recipients = recipients
+            self.cc_string = ','.join(recipients) if recipients else None
+            print("updated cc recipients")

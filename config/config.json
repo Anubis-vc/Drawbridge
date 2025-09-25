@@ -5,11 +5,13 @@
 	},
 	"notifications": {
 		"enabled_types": ["email"],
-		"email": {
-			"recipients": ["vchughcodes@gmail.com", "testing.code.ved@gmail.com"]
-		},
-		"sms": {
-			"recipients": ["+1234567890"]
+		"configs": {
+			"email": {
+				"recipients": ["vchughcodes@gmail.com", "testing.code.ved@gmail.com"]
+			},
+			"sms": {
+				"recipients": ["+1234567890"]
+			}
 		}
 	},
 	"blink_config": {
