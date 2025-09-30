@@ -4,13 +4,14 @@
 		"similarity_threshold": 0.6
 	},
 	"notifications": {
-		"enabled_types": ["email"],
-		"configs": {
+		"enabled_services": ["email"],
+		"config_objects": {
 			"email": {
-				"recipients": ["vchughcodes@gmail.com", "testing.code.ved@gmail.com"]
+				"owner": "testing.code.ved@gmail.com",
+				"recipients": []
 			},
 			"sms": {
-				"recipients": ["+1234567890"]
+				"recipients": ["+9873453"]
 			}
 		}
 	},

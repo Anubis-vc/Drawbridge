@@ -1,7 +1,8 @@
 from face_recognition import FaceRecognizer, Overlay
 from liveness import Blink
 from config import ConfigManager
-# TODO: import and configure notifications
+from notifications import NotificationManager
+from utils import AccessLevel
 
 # third party libraries
 import cv2
@@ -14,6 +15,7 @@ if __name__ == "__main__":
     face_recognition = FaceRecognizer(**config_manager.config['face_recognition'])
     liveness = Blink(**config_manager.config['blink_config'])
     overlay = Overlay(font=cv2.FONT_HERSHEY_SIMPLEX, **config_manager.config['overlay'])
+    notifications = NotificationManager(**config_manager.config['notifications'])
 
     # init mediapipe objects for detection
     mp_face_mesh = mp.solutions.face_mesh
@@ -31,7 +33,12 @@ if __name__ == "__main__":
     print(f"Width: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}")
     print(f"Height: {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
     
+    # time-based vars to hold state for configs and notification refreshes
     config_checked_time = time.time()
+    sent_notis_dictionary = {} # person -> time of notification
+    unknown_time = None
+    
+
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -44,6 +51,7 @@ if __name__ == "__main__":
                 face_recognition.update_config(**config_manager.config['face_recognition'])
                 liveness.update_config(**config_manager.config['blink_config'])
                 overlay.update_config(**config_manager.config['overlay'])
+                notifications.update_config(**config_manager.config['notifcations'])
             config_checked_time = time.time()
                 
 
@@ -84,10 +92,7 @@ if __name__ == "__main__":
                 )
                 
                 # if the person is unknown we do not care if they are real
-                if name == "Unknown":
-                    liveness.reset()
-                else:
-                    liveness.calculate_liveness(landmarks_dict)
+                liveness.reset() if name == "Unknown" else liveness.calculate_liveness(landmarks_dict)
                 
                 overlay.draw(
                     face_recognition.verified,
@@ -100,6 +105,22 @@ if __name__ == "__main__":
                     y1,
                     y2,
                 )
+                
+                # easy case, a known person has been recognized
+                if face_recognition.verified and liveness.live:
+                    if (name not in sent_notis_dictionary 
+                        or time.time() - sent_notis_dictionary[name] > 300):
+                        sent_notis_dictionary[name] = time.time()
+                        notifications.send(name, AccessLevel.ADMIN)
+                # second case, an unknown person is lingering at the door
+                elif not face_recognition.verified:
+                    if not unknown_time:
+                        unknown_time = time.time()
+                    elif unknown_time - time.time() > 10:
+                        notifications.send(name, AccessLevel.STRANGER)
+                        unknown_time = time.time()
+                
+                
         else:  # reset all verified states if face dissapears from frame
             face_recognition.reset()
             liveness.reset()
