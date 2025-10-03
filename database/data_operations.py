@@ -34,7 +34,7 @@ class Database:
         """
 
         try:
-            with sqlite3.connect("face.db") as conn:
+            with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute(users_query)
                 cursor.execute(images_query)
@@ -54,7 +54,8 @@ class Database:
     def add_user(self, name, access_level):
         with self._get_connection() as conn:
             cursor = conn.execute(
-                "INSERT INTO users (name, access_level, num_embeddings, embedding) VALUES (?, ?)",
+                """INSERT INTO users (name, access_level, num_embeddings, embedding)
+                VALUES (?, ?, 0, NULL)""",
                 (name, access_level),
             )
             conn.commit()
@@ -133,7 +134,7 @@ class Database:
 
             # update user embeddings
             cursor = conn.execute(
-                "SELECT num_embeddings, embedding FROM users WHERE id = ?", (user_id)
+                "SELECT num_embeddings, embedding FROM users WHERE id = ?", (user_id,)
             )
             user = cursor.fetchone()
             old_avg = (
