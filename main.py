@@ -1,6 +1,6 @@
 from face_recognition import FaceRecognizer, Overlay
 from liveness import Blink
-from config import ConfigManager
+from config.config_manager import config_manager # singleton config manager
 from notifications import NotificationManager
 from utils import AccessLevel
 
@@ -11,7 +11,6 @@ import time
 
 
 if __name__ == "__main__":
-    config_manager = ConfigManager(config_file='./config/config.json')    
     face_recognition = FaceRecognizer(**config_manager.config['face_recognition'])
     liveness = Blink(**config_manager.config['blink_config'])
     overlay = Overlay(font=cv2.FONT_HERSHEY_SIMPLEX, **config_manager.config['overlay'])
@@ -47,11 +46,12 @@ if __name__ == "__main__":
         
         # check for a config change every 5 seconds
         if  time.time() - config_checked_time > 5:
-            if config_manager.reload_if_changed():
+            if config_manager.has_changed:
                 face_recognition.update_config(**config_manager.config['face_recognition'])
                 liveness.update_config(**config_manager.config['blink_config'])
                 overlay.update_config(**config_manager.config['overlay'])
                 notifications.update_config(**config_manager.config['notifcations'])
+                config_manager.has_changed = False
             config_checked_time = time.time()
                 
 
