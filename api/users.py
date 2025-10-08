@@ -1,14 +1,13 @@
 from api.data_validation import UserCreate, UserResponse, ImageResponse
-from database.data_operations import Database
+from database.data_operations import db
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File
 import cv2
 from insightface.app import FaceAnalysis
 import numpy as np
 
 
-app = FastAPI(title="Face Recognition API")
-db = Database(db_path="database/faces.db")
+router = APIRouter()
 
 
 model = "buffalo_s"
@@ -18,7 +17,7 @@ embedding_service = FaceAnalysis(
 embedding_service.prepare(ctx_id=0, det_size=(640, 640))
 
 
-@app.post("/users", status_code=201)
+@router.post("", status_code=201)
 async def create_user(user: UserCreate) -> UserResponse:
     try:
         user_id = db.add_user(user.name, user.access_level.value)
@@ -29,7 +28,7 @@ async def create_user(user: UserCreate) -> UserResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/users", status_code=200)
+@router.get("/", status_code=200)
 async def get_all_users() -> list[UserResponse]:
     try:
         users = db.get_all_users()
@@ -46,7 +45,7 @@ async def get_all_users() -> list[UserResponse]:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/users/{user_id}", status_code=200)
+@router.get("/{user_id}", status_code=200)
 async def get_user(user_id: int) -> UserResponse:
     try:
         user = db.get_user(user_id)
@@ -64,7 +63,7 @@ async def get_user(user_id: int) -> UserResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/users/{user_id}", status_code=204)
+@router.delete("/{user_id}", status_code=204)
 async def delete_user(user_id: int):
     try:
         db.delete_user(user_id)
@@ -73,7 +72,7 @@ async def delete_user(user_id: int):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/users/{user_id}/images", status_code=201)
+@router.post("/{user_id}/images", status_code=201)
 async def add_image(
     user_id: int, img_name: str, image: UploadFile = File(...)
 ) -> ImageResponse:
@@ -118,21 +117,10 @@ async def add_image(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/users/{user_id}/images/{img_name}", status_code=204)
+@router.delete("/{user_id}/images/{img_name}", status_code=204)
 async def delete_image(user_id: int, img_name: str):
     try:
         db.delete_image(img_name, user_id)
         return {"message": "Image successfully deleted"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Face Recognition API"}
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)

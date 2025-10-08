@@ -216,3 +216,4 @@ test/
 *token.json
 
 *.DS_Store
+*.db
