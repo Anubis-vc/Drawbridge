@@ -1,21 +1,15 @@
 import numpy as np
 import time
+from typing import Any
 # modified code from https://github.com/Pushtogithub23/Eye-Blink-Detection-using-MediaPipe-and-OpenCV
 
 
 class Blink:
-    def __init__(
-        self,
-        ear_threshold: float = 0.21,
-        blink_consec_frames: int = 2,
-        blinks_to_verify: int = 2,
-    ):
-        # blink detection parameters
-        self.ear_threshold = ear_threshold  # threshold for blink detection
-        self.blink_consec_frames = (
-            blink_consec_frames  # threshold for consecutive frames to confirm blink
-        )
-        self.blinks_to_verify = blinks_to_verify  # number of blinks to verify
+    def __init__(self):
+        # blink detection parameters, these will be overwritten by config immediately
+        self.ear_threshold = 0.21  # eye aspect ratio threshold for blink detection
+        self.blink_consec_frames = 2
+        self.blinks_to_verify = 2
         self.closed_eye_frames_counter = (
             0  # counter for consecutive frames with EAR below threshold
         )
@@ -103,14 +97,11 @@ class Blink:
         self.prev_left_ear = 0.0
         self.prev_right_ear = 0.0
         self.last_blink_time = time.time()
-        
-    def update_config(self, ear_threshold: float, blink_consec_frames, blinks_to_verify):
-        if self.ear_threshold != ear_threshold:
-            self.ear_threshold = ear_threshold
-            print("Updated EAR ratio")
-        if self.blink_consec_frames != blink_consec_frames:
-            self.blink_consec_frames = blink_consec_frames
-            print("Updated consecutive blinking frames")
-        if self.blinks_to_verify != blinks_to_verify:
-            self.blinks_to_verify = blinks_to_verify
-            print("Updated blinks to verify")
+
+    def update_config(self, config: dict[str, Any]):
+        self.ear_threshold = config["ear_threshold"]
+        self.blink_consec_frames = config["blink_consec_frames"]
+        self.blinks_to_verify = config["blinks_to_verify"]
+        print(
+            f"[BlinkDetector] ear={self.ear_threshold}, frames={self.blink_consec_frames}, blinks={self.blinks_to_verify}"
+        )

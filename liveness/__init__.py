@@ -1,3 +1,3 @@
 from liveness.blink import Blink
 
-__all__=["Blink"]
+__all__ = ["Blink"]

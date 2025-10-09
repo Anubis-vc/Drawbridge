@@ -6,17 +6,12 @@ import mediapipe as mp
 
 
 class Overlay:
-    def __init__(self, font, font_scale, font_thickness, mesh: bool = False):
-        self.font = font
-        self.scale = font_scale
-        self.thickness = font_thickness
-
-        # Define thickness
-        self._THICKNESS_CONTOURS = 2
-
-        # Initialize MediaPipe drawing styles
-        if mesh:
-            self._setup_mediapipe_styles()
+    def __init__(self):
+        # immediately overwritten by config manager, could be none
+        self.font = cv2.FONT_HERSHEY_SIMPLEX
+        self.scale = 2
+        self.thickness = 2
+        self.mesh = False
 
     def _setup_mediapipe_styles(self):
         """Setup MediaPipe drawing styles"""
@@ -24,6 +19,7 @@ class Overlay:
         self.facemesh_tesselation_style = DrawingSpec(
             color=MpColors.RED.value, thickness=1
         )
+        self._THICKNESS_CONTOURS = 2
 
         self.facemesh_eyes_connection_style = {}
         left_spec = DrawingSpec(color=MpColors.CYAN.value, thickness=1)
@@ -152,13 +148,11 @@ class Overlay:
     def _get_unverified_style(self):
         """Get unverified drawing style"""
         return DrawingSpec(color=OpenCvColors.RED.value, thickness=1)
-    
-    def update_config(self, font_scale, font_thickness, mesh: bool = False):
-        if self.scale != font_scale:
-            self.scale = font_scale
-            print("Updated font scale")
-        if self.thickness != font_thickness:
-            self.thickness = font_thickness
-            print("Updated font thickness")
-        if mesh:
-            self._setup_mediapipe_styles
+
+    def update_config(self, config):
+        self.scale = config["font_scale"]
+        self.thickness = config["font_thickness"]
+        self.mesh = config["mesh"]
+        print(
+            f"Updated Overlay: Scale {self.scale}, Thickness {self.thickness}, Mesh {self.mesh}"
+        )

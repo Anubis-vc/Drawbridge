@@ -18,7 +18,7 @@ class EmailService(NotificationService):
         self.user_id = user_id
         self.owner = owner
         self.recipients = recipients
-        self.cc_string = ','.join(recipients) if recipients else None
+        self.cc_string = ",".join(recipients) if recipients else None
         self.subject = "Facial Recognition Doorway"
 
     def __get_credentials(self):
@@ -83,9 +83,9 @@ class EmailService(NotificationService):
         except Exception as e:
             print(f"Email sending error: {e}")
             return NotificationStatus.UNKNOWN_ERROR
-        
+
     def update_config(self, owner: str, recipients: list):
         if self.recipients != recipients:
             self.recipients = recipients
-            self.cc_string = ','.join(recipients) if recipients else None
+            self.cc_string = ",".join(recipients) if recipients else None
             print("updated cc recipients")

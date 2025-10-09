@@ -38,7 +38,7 @@ class SMSService(NotificationService):
         except Exception as e:
             print(f"SMS sending error: {e}")
             return NotificationStatus.UNKNOWN_ERROR
-        
+
     def update_config(self, recipients):
         print("called update config sms")
         if self.recipients != recipients:

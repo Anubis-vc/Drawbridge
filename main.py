@@ -1,20 +1,37 @@
 from face_recognition import FaceRecognizer, Overlay
 from liveness import Blink
-from config.config_manager import config_manager # singleton config manager
 from notifications import NotificationManager
 from utils import AccessLevel
+
+# singletons
+from config.config_manager import config_manager
+from database.data_operations import db
 
 # third party libraries
 import cv2
 import mediapipe as mp
 import time
+import io
+import numpy as np
+
+
+def get_all_faces() -> dict:
+    result = db.get_all_users()
+    return {r["name"] : np.load(io.BytesIO(r[1]), allow_pickle=False) for r in result}
 
 
 if __name__ == "__main__":
-    face_recognition = FaceRecognizer(**config_manager.config['face_recognition'])
-    liveness = Blink(**config_manager.config['blink_config'])
-    overlay = Overlay(font=cv2.FONT_HERSHEY_SIMPLEX, **config_manager.config['overlay'])
-    notifications = NotificationManager(**config_manager.config['notifications'])
+    face_embeddings = get_all_faces() # TODO: find a way to update this on changes
+    face_recognition = FaceRecognizer()
+    liveness = Blink()
+    overlay = Overlay()
+    notifications = NotificationManager()
+    
+    # set up listeners for configuration
+    config_manager.register_listener("face_recognition", face_recognition.update_config)
+    config_manager.register_listener("blink_config", liveness.update_config)
+    config_manager.register_listener("notifications", notifications.update_config)
+    config_manager.register_listener("overlay", overlay.update_config)
 
     # init mediapipe objects for detection
     mp_face_mesh = mp.solutions.face_mesh
@@ -33,7 +50,6 @@ if __name__ == "__main__":
     print(f"Height: {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
     
     # time-based vars to hold state for configs and notification refreshes
-    config_checked_time = time.time()
     sent_notis_dictionary = {} # person -> time of notification
     unknown_time = None
     
@@ -43,17 +59,6 @@ if __name__ == "__main__":
         if not ret:
             print("Failed to read frame")
             break
-        
-        # check for a config change every 5 seconds
-        if  time.time() - config_checked_time > 5:
-            if config_manager.has_changed:
-                face_recognition.update_config(**config_manager.config['face_recognition'])
-                liveness.update_config(**config_manager.config['blink_config'])
-                overlay.update_config(**config_manager.config['overlay'])
-                notifications.update_config(**config_manager.config['notifcations'])
-                config_manager.has_changed = False
-            config_checked_time = time.time()
-                
 
         # convert to rgb for mediapipe
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
