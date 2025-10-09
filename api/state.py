@@ -1,0 +1,162 @@
+import asyncio
+import io
+import cv2
+import mediapipe as mp
+import numpy as np
+
+from config import config_manager
+from database.data_operations import db
+from face_recognition import FaceRecognizer, Overlay
+from liveness import Blink
+from notifications import NotificationManager
+
+
+class State:
+    def __init__(self) -> None:
+        self.face_embeddings = self._get_embeddings()
+        self.face_recognition = FaceRecognizer()
+        self.liveness = Blink()
+        self.overlay = Overlay()
+        self.notification_manager = NotificationManager()
+
+        self._video_task: asyncio.Task | None = None
+        self._stop_signal = asyncio.Event()
+
+        config_manager.register_listener(
+            "face_recognition", self.face_recognition.update_config
+        )
+        config_manager.register_listener("blink_config", self.liveness.update_config)
+        config_manager.register_listener("overlay", self.overlay.update_config)
+        config_manager.register_listener(
+            "notifications", self.notification_manager.update_config
+        )
+
+    def _get_embeddings(self) -> dict[str, np.ndarray]:
+        result = db.get_all_users()
+        return {
+            row["name"]: np.load(io.BytesIO(row[1]), allow_pickle=False)
+            for row in result
+        }
+
+    async def start_video(self) -> str:
+        if self._video_task and not self._video_task.done():
+            return "Video already running"
+
+        self._stop_signal.clear()
+        self._video_task = asyncio.create_task(self._run_video_loop())
+        return "Started Video"
+
+    async def stop_video(self) -> str:
+        if not self._video_task or self._video_task.done():
+            return "Video not running"
+        self._stop_signal.set()
+        await self._video_task
+        self._video_task = None
+        return "Stopped Video"
+
+    async def toggle_video(self) -> str:
+        if self._video_task and not self._video_task.done():
+            return await self.stop_video()
+        return await self.start_video()
+
+    async def _run_video_loop(self):
+        face_mesh = mp.solutions.face_mesh.FaceMesh(
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=0.7,
+            min_tracking_confidence=0.7,
+        )
+
+        cap = cv2.VideoCapture(0)
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 720)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+        print(f"Width: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}")
+        print(f"Height: {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
+
+        sent_notis_dictionary: dict[str, float] = {}
+        unknown_time: float | None = None
+
+        try:
+            while not self._stop_signal.is_set() and cap.isOpened():
+                # use full thread for intensive blocking operations
+                ret, frame = await asyncio.to_thread(cap.read)
+                if not ret:
+                    print("Failed to read frame")
+                    break
+
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                results = await asyncio.to_thread(face_mesh.process, rgb_frame)
+
+                if results.multi_face_landmarks:
+                    for landmarks in results.multi_face_landmarks:
+                        name, face_similarity_score = (
+                            self.face_recognition.run_facial_recognition(
+                                frame, self.face_embeddings
+                            )
+                        )
+
+                        img_height, img_width, _ = frame.shape
+                        landmarks_dict = {}
+                        x1, y1, x2, y2 = img_width, img_height, 0, 0
+                        for i, lm in enumerate(landmarks.landmark):
+                            x = int(lm.x * img_width)
+                            y = int(lm.y * img_height)
+                            landmarks_dict[i] = (x, y)
+                            x1 = min(x1, x)
+                            y1 = min(y1, y)
+                            x2 = max(x2, x)
+                            y2 = max(y2, y)
+
+                        x1, y1, x2, y2 = (
+                            max(x1 - 15, 0),
+                            max(y1 - 15, 0),
+                            min(x2 + 15, img_width),
+                            min(y2 + 15, img_height),
+                        )
+
+                        if name == "Unknown":
+                            self.liveness.reset()
+                        else:
+                            self.liveness.calculate_liveness(landmarks_dict)
+
+                        self.overlay.draw(
+                            self.face_recognition.verified,
+                            self.liveness.live,
+                            name,
+                            self.liveness.total_blinks,
+                            frame,
+                            x1,
+                            x2,
+                            y1,
+                            y2,
+                        )
+
+                        # Notification stubs mirror main.py commented logic
+                        # if self.face_recognition.verified and self.liveness.live:
+                        #     if (
+                        #         name not in sent_notis_dictionary
+                        #         or time.time() - sent_notis_dictionary[name] > 300
+                        #     ):
+                        #         sent_notis_dictionary[name] = time.time()
+                        #         self.notification_manager.send(name, AccessLevel.ADMIN)
+                        # elif not self.face_recognition.verified:
+                        #     if not unknown_time:
+                        #         unknown_time = time.time()
+                        #     elif unknown_time - time.time() > 10:
+                        #         self.notification_manager.send(name, AccessLevel.STRANGER)
+                        #         unknown_time = time.time()
+                else:  # no face landmarks recognized
+                    self.face_recognition.reset()
+                    self.liveness.reset()
+
+                cv2.imshow("Face Detection", frame)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    self._stop_signal.set()
+                    break
+        finally:
+            cap.release()
+            cv2.destroyAllWindows()
+            face_mesh.close()
+            self._stop_signal.set()
+            if self._video_task:
+                self._video_task = None

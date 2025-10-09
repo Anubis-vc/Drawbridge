@@ -15,7 +15,7 @@ async def get_config() -> dict[str, Any]:
 
 
 @router.get("/{section}", status_code=status.HTTP_200_OK)
-async def get_config_section(section: str) -> Any:
+async def get_config_section(section: str) -> dict:
     try:
         return config_manager.get_section(section)
     except KeyError:
@@ -27,7 +27,7 @@ async def get_config_section(section: str) -> Any:
 
 
 @router.put("/{section}", status_code=status.HTTP_200_OK)
-async def replace_config_section(section: str, payload: Any) -> Any:
+async def replace_config_section(section: str, payload: dict) -> dict:
     try:
         updated_section = config_manager.replace_section(section, payload)
         return {"section": section, "config": updated_section}
