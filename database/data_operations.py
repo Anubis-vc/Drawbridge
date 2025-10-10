@@ -2,12 +2,14 @@ import sqlite3
 from contextlib import contextmanager
 import numpy as np
 import io
+from typing import Callable
 
 
 class Database:
-    def __init__(self, db_path="faces.db"):
+    def __init__(self, db_path="./database/faces.db"):
         self.db_path = db_path
         self._init_db()
+        self._embedding_listener = None
 
     def _init_db(self):
         users_query = """
@@ -46,10 +48,20 @@ class Database:
     def _get_connection(self):
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row  # Access columns by name
+        conn.execute(
+            "PRAGMA foreign_keys = ON"
+        )  # needed per connection to make fk checks work
         try:
             yield conn
         finally:
             conn.close()
+
+    def register_embedding_listener(self, listener: Callable):
+        self._embedding_listener = listener
+
+    def _notify_embedding_listener(self, user_name: str, embedding: np.ndarray):
+        if self._embedding_listener:
+            self._embedding_listener(user_name, embedding)
 
     def add_user(self, name, access_level):
         with self._get_connection() as conn:
@@ -91,15 +103,16 @@ class Database:
 
             # then recompute average for user
             cursor = conn.execute(
-                "SELECT num_embeddings, embedding FROM users WHERE id= ?", (user_id,)
+                "SELECT name, num_embeddings, embedding FROM users WHERE id= ?",
+                (user_id,),
             )
             user_row = cursor.fetchone()
             old_avg = (
-                np.load(io.BytesIO(user_row[1]), allow_pickle=False)
-                if user_row[1]
+                np.load(io.BytesIO(user_row[2]), allow_pickle=False)
+                if user_row[2]
                 else None
             )
-            num_embeddings = user_row[0] or 0
+            num_embeddings = user_row[1] or 0
 
             if old_avg is None or num_embeddings == 0:
                 new_avg = normed_embedding
@@ -120,6 +133,7 @@ class Database:
 
             # commit only if everything succeeds
             conn.commit()
+            self._notify_embedding_listener(user_row[0], new_avg)
 
     def delete_image(self, img_name, user_id):
         """Delete the image embedding then update the user info"""
@@ -134,13 +148,16 @@ class Database:
 
             # update user embeddings
             cursor = conn.execute(
-                "SELECT num_embeddings, embedding FROM users WHERE id = ?", (user_id,)
+                "SELECT name, num_embeddings, embedding FROM users WHERE id = ?",
+                (user_id,),
             )
             user = cursor.fetchone()
             old_avg = (
-                np.load(io.BytesIO(user[1]), allow_pickle=False) if user[1] else None
+                np.load(io.BytesIO(user[2]), allow_pickle=False) if user[2] else None
             )
-            num_embeddings = user[0]
+            num_embeddings = user[1]
+
+            new_avg = None
             if num_embeddings <= 1:
                 conn.execute(
                     "UPDATE users SET num_embeddings = 0, embedding = NULL WHERE id = ?",
@@ -167,3 +184,7 @@ class Database:
 
             # commit only if everything else succeeds
             conn.commit()
+            self._notify_embedding_listener(user[0], new_avg)
+
+
+db = Database()  # another singleton to be used around the project

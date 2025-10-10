@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, status
 
 from api.config import router as config_router
 from api.users import router as users_router
-from api.state import State
+from runtime_services.state import State
 
 
 @asynccontextmanager
@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     app.state.runtime = runtime
     try:
         yield
-    finally:
+    finally:  # make sure video released properly when app is shut down
         video_task = runtime._video_task
         if video_task and not video_task.done():
             runtime._stop_signal.set()

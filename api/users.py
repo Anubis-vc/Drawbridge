@@ -17,7 +17,7 @@ embedding_service = FaceAnalysis(
 embedding_service.prepare(ctx_id=0, det_size=(640, 640))
 
 
-@router.post("", status_code=201)
+@router.post("/", status_code=201)
 async def create_user(user: UserCreate) -> UserResponse:
     try:
         user_id = db.add_user(user.name, user.access_level.value)
@@ -117,7 +117,7 @@ async def add_image(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/{user_id}/images/{img_name}", status_code=204)
+@router.delete("/{user_id}/images/{img_name}", status_code=200)
 async def delete_image(user_id: int, img_name: str):
     try:
         db.delete_image(img_name, user_id)

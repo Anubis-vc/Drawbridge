@@ -1,19 +1,18 @@
 import asyncio
-import io
 import cv2
 import mediapipe as mp
-import numpy as np
 
 from config import config_manager
 from database.data_operations import db
+
 from face_recognition import FaceRecognizer, Overlay
 from liveness import Blink
 from notifications import NotificationManager
+from runtime_services.embedding_manager import EmebeddingManager
 
 
 class State:
     def __init__(self) -> None:
-        self.face_embeddings = self._get_embeddings()
         self.face_recognition = FaceRecognizer()
         self.liveness = Blink()
         self.overlay = Overlay()
@@ -30,13 +29,10 @@ class State:
         config_manager.register_listener(
             "notifications", self.notification_manager.update_config
         )
-
-    def _get_embeddings(self) -> dict[str, np.ndarray]:
-        result = db.get_all_users()
-        return {
-            row["name"]: np.load(io.BytesIO(row[1]), allow_pickle=False)
-            for row in result
-        }
+        
+        self.embedding_manager = EmebeddingManager(db)
+        db.register_embedding_listener(self.embedding_manager.on_embedding_update)
+        
 
     async def start_video(self) -> str:
         if self._video_task and not self._video_task.done():
@@ -91,7 +87,7 @@ class State:
                     for landmarks in results.multi_face_landmarks:
                         name, face_similarity_score = (
                             self.face_recognition.run_facial_recognition(
-                                frame, self.face_embeddings
+                                frame, self.embedding_manager.embeddings
                             )
                         )
 
@@ -156,7 +152,8 @@ class State:
         finally:
             cap.release()
             cv2.destroyAllWindows()
+            for _ in range(2):
+                cv2.waitKey(1)  # let HighGUI process the close event
             face_mesh.close()
             self._stop_signal.set()
-            if self._video_task:
-                self._video_task = None
+            self._video_task = None
