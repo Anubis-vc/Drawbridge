@@ -1,4 +1,4 @@
-from api.data_validation import UserCreate, UserResponse, ImageResponse
+from utils.schemas import UserCreate, UserResponse, ImageResponse
 from database.data_operations import db
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
