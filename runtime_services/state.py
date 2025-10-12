@@ -29,10 +29,9 @@ class State:
         config_manager.register_listener(
             "notifications", self.notification_manager.update_config
         )
-        
+
         self.embedding_manager = EmebeddingManager(db)
-        db.register_embedding_listener(self.embedding_manager.on_embedding_update)
-        
+        db.register_listener(self.embedding_manager)
 
     async def start_video(self) -> str:
         if self._video_task and not self._video_task.done():
@@ -68,9 +67,6 @@ class State:
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
         print(f"Width: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)}")
         print(f"Height: {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
-
-        sent_notis_dictionary: dict[str, float] = {}
-        unknown_time: float | None = None
 
         try:
             while not self._stop_signal.is_set() and cap.isOpened():
@@ -127,20 +123,14 @@ class State:
                             y2,
                         )
 
-                        # Notification stubs mirror main.py commented logic
-                        # if self.face_recognition.verified and self.liveness.live:
-                        #     if (
-                        #         name not in sent_notis_dictionary
-                        #         or time.time() - sent_notis_dictionary[name] > 300
-                        #     ):
-                        #         sent_notis_dictionary[name] = time.time()
-                        #         self.notification_manager.send(name, AccessLevel.ADMIN)
-                        # elif not self.face_recognition.verified:
-                        #     if not unknown_time:
-                        #         unknown_time = time.time()
-                        #     elif unknown_time - time.time() > 10:
-                        #         self.notification_manager.send(name, AccessLevel.STRANGER)
-                        #         unknown_time = time.time()
+                        # TODO: add notifications back in
+                        # self.notification_manager.check_and_send(
+                        #     self.face_recognition.verified,
+                        #     self.liveness.live,
+                        #     name,
+                        #     access_level=A
+                        #     )
+
                 else:  # no face landmarks recognized
                     self.face_recognition.reset()
                     self.liveness.reset()

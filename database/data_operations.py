@@ -2,14 +2,15 @@ import sqlite3
 from contextlib import contextmanager
 import numpy as np
 import io
-from typing import Callable
+
+from utils.enums import AccessLevel
 
 
 class Database:
     def __init__(self, db_path="./database/faces.db"):
         self.db_path = db_path
         self._init_db()
-        self._embedding_listener = None
+        self._listener = None
 
     def _init_db(self):
         users_query = """
@@ -56,12 +57,23 @@ class Database:
         finally:
             conn.close()
 
-    def register_embedding_listener(self, listener: Callable):
-        self._embedding_listener = listener
+    def register_listener(self, listener):
+        self._listener = listener
 
-    def _notify_embedding_listener(self, user_name: str, embedding: np.ndarray):
-        if self._embedding_listener:
-            self._embedding_listener(user_name, embedding)
+    def _notify_embedding_listener(self, user_id: int, embedding: np.ndarray):
+        if self._listener:
+            self._listener.on_embedding_update(user_id, embedding)
+
+    def _notify_user_listener(
+        self,
+        user_id: int,
+        name: str | None = None,
+        access: AccessLevel | None = None,
+        new_user: tuple[str, AccessLevel] | None = None,
+        delete_user: bool = False,
+    ):
+        if self._listener:
+            self._listener.on_user_update(user_id, name, access, new_user, delete_user)
 
     def add_user(self, name, access_level):
         with self._get_connection() as conn:
@@ -70,8 +82,11 @@ class Database:
                 VALUES (?, ?, 0, NULL)""",
                 (name, access_level),
             )
+            user_id = cursor.lastrowid
             conn.commit()
-            return cursor.lastrowid
+        access_enum = AccessLevel(access_level)
+        self._notify_user_listener(user_id, new_user=(name, access_enum))
+        return user_id
 
     def get_user(self, user_id):
         with self._get_connection() as conn:
@@ -85,8 +100,43 @@ class Database:
 
     def delete_user(self, user_id):
         with self._get_connection() as conn:
-            conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            cursor = conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+            deleted = cursor.rowcount
             conn.commit()
+        if deleted:
+            self._notify_user_listener(user_id, delete_user=True)
+            self._notify_embedding_listener(user_id, None)
+        else:
+            raise ValueError(f"User {user_id} not found")
+
+    def update_name(self, user_id: int, name: str):
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE users SET name = ? WHERE id = ?", (name, user_id)
+            )
+            if cursor.rowcount == 0:
+                raise ValueError(f"User {user_id} not found")
+            conn.commit()
+            user_row = conn.execute(
+                "SELECT * FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+        if user_row is None:
+            raise ValueError(f"User {user_id} not found after update")
+        access_enum = AccessLevel(user_row["access_level"])
+        self._notify_user_listener(user_id, name=user_row["name"], access=access_enum)
+        return user_row
+
+    def update_access_level(self, user_id, access_level: AccessLevel):
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "UPDATE users SET access_level = ? WHERE id = ?",
+                (access_level.value, user_id),
+            )
+            if cursor.rowcount == 0:
+                raise ValueError(f"User {user_id} not found")
+            conn.commit()
+        access_enum = AccessLevel(access_level)
+        self._notify_user_listener(user_id, access=access_enum)
 
     def add_image(self, img_name, user_id, normed_embedding: np.ndarray):
         """Creates an embedding for an image and updates the users avg embedding"""
@@ -133,7 +183,7 @@ class Database:
 
             # commit only if everything succeeds
             conn.commit()
-            self._notify_embedding_listener(user_row[0], new_avg)
+            self._notify_embedding_listener(user_id, new_avg)
 
     def delete_image(self, img_name, user_id):
         """Delete the image embedding then update the user info"""
@@ -184,7 +234,7 @@ class Database:
 
             # commit only if everything else succeeds
             conn.commit()
-            self._notify_embedding_listener(user[0], new_avg)
+            self._notify_embedding_listener(user_id, new_avg)
 
 
 db = Database()  # another singleton to be used around the project

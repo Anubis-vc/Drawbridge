@@ -1,4 +1,5 @@
 from utils.schemas import UserCreate, UserResponse, ImageResponse
+from utils.enums import AccessLevel
 from database.data_operations import db
 
 from fastapi import APIRouter, HTTPException, UploadFile, File
@@ -63,11 +64,35 @@ async def get_user(user_id: int) -> UserResponse:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/{user_id}", status_code=204)
+@router.delete("/{user_id}")
 async def delete_user(user_id: int):
     try:
         db.delete_user(user_id)
         return {"message": "User deleted successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/{user_id}/name/{name}")
+async def patch_user_name(user_id: int, name: str):
+    try:
+        db.update_name(user_id, name)
+        return {"message": f"updated user: {user_id} with name: {name}"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/{user_id}/access/{access_level}")
+async def patch_user_access(user_id: int, access_level: AccessLevel):
+    try:
+        db.update_access_level(user_id, access_level)
+        return {"message": f"updated user: {user_id} with access: {access_level.value}"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
