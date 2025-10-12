@@ -1,4 +1,4 @@
-from utils import AccessLevel
+from utils.enums import AccessLevel
 
 
 def build_message(name: str, access_level):
