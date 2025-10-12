@@ -70,7 +70,7 @@ class State:
 
         try:
             while not self._stop_signal.is_set() and cap.isOpened():
-                # use full thread for intensive blocking operations
+                # use thread for intensive blocking operations so api can still respond quickly
                 ret, frame = await asyncio.to_thread(cap.read)
                 if not ret:
                     print("Failed to read frame")
@@ -81,12 +81,16 @@ class State:
 
                 if results.multi_face_landmarks:
                     for landmarks in results.multi_face_landmarks:
-                        name, face_similarity_score = (
-                            self.face_recognition.run_facial_recognition(
-                                frame, self.embedding_manager.embeddings
-                            )
+                        (
+                            name,
+                            score,
+                            access,
+                        ) = await asyncio.to_thread(  # TODO: update for no-GIL python
+                            self.face_recognition.run_facial_recognition,
+                            frame,
+                            self.embedding_manager.embeddings,
+                            self.embedding_manager.users,
                         )
-
                         img_height, img_width, _ = frame.shape
                         landmarks_dict = {}
                         x1, y1, x2, y2 = img_width, img_height, 0, 0
@@ -123,13 +127,12 @@ class State:
                             y2,
                         )
 
-                        # TODO: add notifications back in
-                        # self.notification_manager.check_and_send(
-                        #     self.face_recognition.verified,
-                        #     self.liveness.live,
-                        #     name,
-                        #     access_level=A
-                        #     )
+                        self.notification_manager.check_and_send(
+                            self.face_recognition.verified,
+                            self.liveness.live,
+                            name,
+                            access_level=access,
+                        )
 
                 else:  # no face landmarks recognized
                     self.face_recognition.reset()
