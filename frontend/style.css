@@ -62,7 +62,7 @@ body {
 }
 
 .nav-btn.active {
-    border-color: var(--lavender);
+    color: var(--lavender);
 }
 
 #video-stream {
@@ -90,10 +90,6 @@ main {
 
 .config.active {
     display: block;
-}
-
-.hidden {
-    display: none !important;
 }
 
 @keyframes fade-in {
