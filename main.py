@@ -1,9 +1,9 @@
 from __future__ import annotations
-
 from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.config import router as config_router
 from api.users import router as users_router
@@ -24,6 +24,21 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Face Recognition Service", lifespan=lifespan)
+
+allowed_origins = {
+    "http://127.0.0.1",
+    "http://127.0.0.1:5500",
+    "http://localhost",
+    "http://localhost:5500",
+}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=list(allowed_origins),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(users_router, prefix="/users")
 app.include_router(config_router, prefix="/config")
 

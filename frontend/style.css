@@ -48,7 +48,7 @@ body {
 }
 
 .nav-btn {
-	font-size: larger;
+    font-size: larger;
     margin: 1rem;
     color: var(--dartmouth-green);
     background: transparent;
@@ -81,21 +81,91 @@ main {
     border: 1px solid var(--cal-poly-green);
     padding: 20px;
     margin-top: 0;
+    position: relative;
 }
 
 .config {
     display: none;
-    animation: fade-in 200ms ease;
+    animation: fade-in 300ms ease;
 }
 
 .config.active {
     display: block;
 }
 
+.three-column-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    padding: 0 3rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--dartmouth-green);
+    margin-top: 20px;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.help-text {
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: #666;
+    font-style: italic;
+}
+
+.save-section {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.save-btn {
+    padding: 1rem 2rem;
+    font-size: 16px;
+    color: white;
+    background: var(--grey);
+    cursor: not-allowed;
+    transition: all 0.2s;
+}
+
+.save-btn.active {
+    background: var(--dartmouth-green);
+    cursor: pointer;
+}
+
+.save-status {
+    font-size: 14px;
+    margin-left: 12px;
+}
+
+.save-status.success {
+    color: var(--dartmouth-green);
+}
+
+.save-status.error {
+    color: red;
+}
+
 @keyframes fade-in {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
