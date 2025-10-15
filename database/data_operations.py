@@ -138,6 +138,15 @@ class Database:
         access_enum = AccessLevel(access_level)
         self._notify_user_listener(user_id, access=access_enum)
 
+    def get_images_for_user(self, user_id: int):
+        with self._get_connection() as conn:
+            cursor = conn.execute(
+                "SELECT img_name FROM images WHERE user_id = ?", (user_id,)
+            )
+            if cursor.rowcount == 0:
+                raise ValueError(f"User {user_id} not found")
+            return cursor.fetchall()
+
     def add_image(self, img_name, user_id, normed_embedding: np.ndarray):
         """Creates an embedding for an image and updates the users avg embedding"""
         buffer = io.BytesIO()

@@ -97,6 +97,18 @@ async def patch_user_access(user_id: int, access_level: AccessLevel):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{user_id}/images")
+async def get_user_images(user_id: int) -> dict[str, list[str]]:
+    try:
+        results = db.get_images_for_user(user_id)
+        all_images = [entry["img_name"] for entry in results]
+        return {"images": all_images}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/{user_id}/images", status_code=201)
 async def add_image(
     user_id: int, img_name: str, image: UploadFile = File(...)
