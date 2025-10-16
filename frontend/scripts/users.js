@@ -160,8 +160,7 @@ async function deleteImage(userId, imageName, dropdown, button) {
   } catch (err) {
     console.error("Failed to delete image", err);
     alert(`Could not delete image. Please try again.`);
-  }
-  finally {
+  } finally {
     button.textContent = "Delete";
   }
 }
@@ -318,6 +317,88 @@ async function deleteUser(userId) {
   }
 }
 
+// allow editing the user's name
+async function saveUserNameChanges(userId, button) {
+  const row = document.querySelector(`.users-row[data-user-id="${userId}"]`);
+  if (!row) {
+    console.warn(`Row not found for user id ${userId}`);
+    return;
+  }
+
+  const nameInput = row.querySelector(".editable-name-input");
+  // const accessSelect = row.querySelector(".editable-access-select");
+
+  const newName = nameInput.value.trim();
+  // const newAccessLevel = accessSelect.value;
+
+  if (!newName) {
+    alert("Name cannot be empty");
+    return;
+  }
+
+  // Disable button while saving
+  button.disabled = true;
+
+  try {
+    const response = await fetch(
+      `${USERS_API_BASE}/${userId}/name/${newName}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to update user: ${response.status}`);
+    }
+
+    // Update the original values to the new values
+    nameInput.dataset.originalValue = newName;
+    // accessSelect.dataset.originalValue = newAccessLevel;
+  } catch (err) {
+    console.error("Failed to update user", err);
+    alert("Could not update user. Please try again.");
+    button.disabled = false;
+  }
+}
+
+// allow editing the user's access level
+async function saveUserAccessChanges(userId, button) {
+  const row = document.querySelector(`.users-row[data-user-id="${userId}"]`);
+  if (!row) {
+    console.warn(`Row not found for user id ${userId}`);
+    return;
+  }
+
+  const accessSelect = row.querySelector(".editable-access-select");
+  const newAccessLevel = accessSelect.value;
+
+  // Disable button while saving
+  button.disabled = true;
+
+  try {
+    const response = await fetch(
+      `${USERS_API_BASE}/${userId}/access/${newAccessLevel}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to update user: ${response.status}`);
+    }
+  } catch (err) {
+    console.error("Failed to update user", err);
+    alert("Could not update user. Please try again.");
+    button.disabled = false;
+  }
+}
+
 // ============================================
 // Display Functions
 // ============================================
@@ -356,9 +437,23 @@ function createNameCell(user) {
   const cell = document.createElement("span");
   cell.className = "users-cell users-cell--name";
 
-  // Use the user's name, or a fallback if no name exists
-  cell.textContent = user.name || `User ${user.id || ""}`;
+  // Create an editable input for the name
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "editable-name-input";
+  input.value = user.name || `User ${user.id || ""}`;
+  input.dataset.userId = user.id;
 
+  // Enable save button when name changes
+  input.addEventListener("input", () => {
+    const row = cell.parentElement;
+    const saveBtn = row.querySelector(".save-user-btn");
+    if (saveBtn) {
+      saveBtn.disabled = false;
+    }
+  });
+
+  cell.appendChild(input);
   return cell;
 }
 
@@ -366,9 +461,29 @@ function createNameCell(user) {
 function createAccessCell(user) {
   const cell = document.createElement("span");
   cell.className = "users-cell users-cell--access";
-  const access_level = user.access_level;
-  cell.textContent =
-    access_level.charAt(0).toUpperCase() + access_level.slice(1);
+
+  // Create a dropdown for access level
+  const select = document.createElement("select");
+  select.className = "editable-access-select";
+  select.dataset.userId = user.id;
+
+  const accessLevels = ["admin", "family", "friend", "stranger"];
+  accessLevels.forEach((level) => {
+    const option = document.createElement("option");
+    option.value = level;
+    option.textContent = level.charAt(0).toUpperCase() + level.slice(1);
+    option.selected = level === user.access_level;
+    select.appendChild(option);
+  });
+
+  // Enable save button when access level changes
+  select.addEventListener("change", () => {
+    const row = cell.parentElement;
+    const saveBtn = row.querySelector(".save-user-btn");
+    saveBtn.disabled = false;
+  });
+
+  cell.appendChild(select);
   return cell;
 }
 
@@ -493,14 +608,17 @@ function createActionsCell(user) {
   const cell = document.createElement("span");
   cell.className = "users-cell users-cell--actions";
 
-  // Delete user button
-  const deleteBtn = document.createElement("button");
-  deleteBtn.className = "delete-user-btn";
-  deleteBtn.textContent = "×";
-  deleteBtn.title = "Delete user";
+  // Save changes button (checkmark)
+  const saveBtn = document.createElement("button");
+  saveBtn.className = "save-user-btn";
+  saveBtn.textContent = "✓";
+  saveBtn.title = "Save changes";
+  saveBtn.disabled = true;
+  saveBtn.dataset.userId = user.id;
 
-  deleteBtn.addEventListener("click", async () => {
-    await deleteUser(user.id);
+  saveBtn.addEventListener("click", async () => {
+    await saveUserNameChanges(user.id, saveBtn);
+    await saveUserAccessChanges(user.id, saveBtn);
   });
 
   // Upload image button
@@ -515,6 +633,17 @@ function createActionsCell(user) {
     openUploadDialog(user.id, dropdown);
   });
 
+  // Delete user button
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "delete-user-btn";
+  deleteBtn.textContent = "×";
+  deleteBtn.title = "Delete user";
+
+  deleteBtn.addEventListener("click", async () => {
+    await deleteUser(user.id);
+  });
+
+  cell.appendChild(saveBtn);
   cell.appendChild(uploadBtn);
   cell.appendChild(deleteBtn);
   return cell;

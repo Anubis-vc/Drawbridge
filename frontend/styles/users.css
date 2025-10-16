@@ -123,7 +123,7 @@
 }
 
 /* ============================================
-   DROPDOWN STYLING
+   DROPDOWN IMAGES STYLING
    ============================================ */
 .users-cell--images select {
   flex: 1; /* Take up remaining space */
@@ -134,6 +134,7 @@
   font-size: 14px;
   cursor: pointer;
   transition: border-color 0.2s;
+  color: var(--dartmouth-green)
 }
 
 .users-cell--images select:hover:not(:disabled) {
@@ -184,7 +185,7 @@
    ============================================ */
 .upload-image-btn {
     padding: 5px 8px;
-    background: var(--cal-poly-green);
+    background: var(--lavender);
     color: white;
     border: none;
     border-radius: 4px;
@@ -197,7 +198,7 @@
 }
 
 .upload-image-btn:hover {
-    background: var(--dartmouth-green);
+    background: var(--royal-purple);
 }
 
 /* ============================================
@@ -225,7 +226,7 @@
    ============================================ */
 .delete-user-btn {
   padding: 5px 8px;
-  background: #dc3545;
+  background: var(--neon-orange);
   color: white;
   border: none;
   border-radius: 6px;
@@ -332,4 +333,72 @@
 
 .btn-secondary:hover {
   background: #5a6268;
+}
+
+/* ============================================
+   EDITABLE FIELDS
+   ============================================ */
+.editable-name-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dartmouth-green);
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.editable-name-input:focus {
+  outline: none;
+  border-color: var(--cal-poly-green);
+  box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.1);
+}
+
+.editable-access-select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  color: var(--dartmouth-green);
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.editable-access-select:focus {
+  outline: none;
+  border-color: var(--cal-poly-green);
+  box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.1);
+}
+
+.editable-access-select:hover {
+  border-color: #999;
+}
+
+.save-user-btn {
+  padding: 5px 8px;
+  background: var(--cal-poly-green);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-user-btn:hover:not(:disabled) {
+  background: var(--dartmouth-green);
+}
+
+.save-user-btn:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
