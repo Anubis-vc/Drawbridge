@@ -1,169 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Facial Recognition App</title>
-	<link rel="stylesheet" href="style.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Facial Recognition App</title>
+    <link rel="stylesheet" href="./styles/main.css" />
+    <link rel="stylesheet" href="./styles/users.css" />
+  </head>
+  <body>
+    <div id="video-stream">
+      <h1>Video Stream Pending</h1>
+    </div>
 
-	<div id="video-stream">
-		<h1>Video Stream Pending</h1>
-	</div>
+    <nav id="sidebar">
+      <h2>Configurations</h2>
+      <hr />
+      <button class="nav-btn active" data-section="recognition">
+        Facial Recognition
+      </button>
+      <button class="nav-btn" data-section="notifications">
+        Notifications
+      </button>
+      <hr />
+      <button class="nav-btn" data-section="user-mgmt">Users</button>
+    </nav>
 
-	<nav id="sidebar">
-		<h2>Configurations</h2>
-		<hr>
-		<button class="nav-btn active" data-section="recognition">Facial Recognition</button>
-		<button class="nav-btn" data-section="notifications">Notifications</button>
-		<hr>
-		<button class="nav-btn" data-section="user-mgmt">Users</button>
-	</nav>
+    <main>
+      <section id="recognition" class="config active">
+        <div class="three-column-grid">
+          <!-- Column 1: Face Recognition -->
+          <div class="config-column" data-section="face_recognition">
+            <h3 class="subsection-title">Recognition Settings</h3>
 
-	<main>
-		<section id="recognition" class="config active">
-            <div class="three-column-grid">
-                <!-- Column 1: Face Recognition -->
-                <div class="config-column" data-section="face_recognition">
-                    <h3 class="subsection-title">Recognition Settings</h3>
-                    
-                    <div class="form-group">
-                        <label for="model-select">Recognition Model</label>
-                        <select id="model-select" data-api-field="model" class="form-control">
-							<!-- Could honestly configure with any one of the faceanalysis models-->
-                            <option value="buffalo_s">Lightweight</option>
-                            <option value="buffalo_l">High Accuracy</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="confidence-threshold">Confidence Threshold</label>
-                        <input 
-                            type="number" 
-                            id="confidence-threshold" 
-                            class="form-control"
-                            min="0" 
-                            max="1" 
-                            step="0.01" 
-                            value="0.6"
-                            placeholder="0.6"
-							data-api-field="similarity_threshold"
-						>
-                        <small class="help-text">Min confidence (0-1)</small>
-                    </div>
-                </div>
-
-                <!-- Column 2: Blink Detection -->
-                <div class="config-column" data-section="blink_config">
-                    <h3 class="subsection-title">Blink Detection</h3>
-
-                    <div class="form-group">
-                        <label for="ear-threshold">Eye Aspect Ratio</label>
-                        <input 
-                            type="number" 
-                            id="ear-threshold" 
-                            class="form-control"
-                            min="0" 
-                            max="1" 
-                            step="0.01" 
-                            value="0.22"
-                            placeholder="0.22"
-							data-api-field="ear-threshold"
-						>
-                        <small class="help-text">Threshold (0-1)</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="consecutive-frames">Consecutive Frames</label>
-                        <input 
-                            type="number" 
-                            id="consecutive-frames" 
-                            class="form-control"
-                            min="1" 
-                            step="1" 
-                            value="2"
-                            placeholder="2"
-							data-api-field="blink_consec_frames"	
-						>
-                        <small class="help-text">Frames to register blink</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="blinks-verify">Blinks to Verify</label>
-                        <input 
-                            type="number" 
-                            id="blinks-verify" 
-                            class="form-control"
-                            min="1" 
-                            step="1" 
-                            value="2"
-                            placeholder="2"
-							data-api-field="blinks_to_verify"	
-						>
-                        <small class="help-text">Required blinks</small>
-                    </div>
-                </div>
-
-                <!-- Column 3: Overlay Settings -->
-                <div class="config-column" data-section="overlay">
-                    <h3 class="subsection-title">Overlay Settings</h3>
-
-                    <div class="form-group">
-                        <label for="font-scale">Font Scale</label>
-                        <input 
-                            type="number" 
-                            id="font-scale" 
-                            class="form-control"
-                            min="1" 
-                            step="1" 
-                            value="2"
-                            placeholder="2"
-							data-api-field="font_scale"	
-						>
-                        <small class="help-text">Text size multiplier</small>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="font-thickness">Font Thickness</label>
-                        <input 
-                            type="number" 
-                            id="font-thickness" 
-                            class="form-control"
-                            min="1" 
-                            step="1" 
-                            value="2"
-                            placeholder="2"
-							data-api-field="font_thickness"
-						>
-                        <small class="help-text">Text thickness (px)</small>
-                    </div>
-                </div>
+            <div class="form-group">
+              <label for="model-select">Recognition Model</label>
+              <select
+                id="model-select"
+                data-api-field="model"
+                class="form-control"
+              >
+                <!-- Could honestly configure with any one of the faceanalysis models-->
+                <option value="buffalo_s">Lightweight</option>
+                <option value="buffalo_l">High Accuracy</option>
+              </select>
             </div>
 
-            <!-- Save Button -->
-            <div class="save-section">
-                <button id="save-btn" class="save-btn" type="button">Save Changes</button>
-                <span id="save-status" class="save-status"></span>
+            <div class="form-group">
+              <label for="confidence-threshold">Confidence Threshold</label>
+              <input
+                type="number"
+                id="confidence-threshold"
+                class="form-control"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.6"
+                placeholder="0.6"
+                data-api-field="similarity_threshold"
+              />
+              <small class="help-text">Min confidence (0-1)</small>
             </div>
-        </section>
+          </div>
 
-		<section id="blink-detection" class="config hidden">
-			<h2>Blink Detection</h2>
-		</section>
+          <!-- Column 2: Blink Detection -->
+          <div class="config-column" data-section="blink_config">
+            <h3 class="subsection-title">Blink Detection</h3>
 
-		<section id="notifications" class="config hidden">
-			<h2>Notifications</h2>
-		</section>
+            <div class="form-group">
+              <label for="ear-threshold">Eye Aspect Ratio</label>
+              <input
+                type="number"
+                id="ear-threshold"
+                class="form-control"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.22"
+                placeholder="0.22"
+                data-api-field="ear-threshold"
+              />
+              <small class="help-text">Threshold (0-1)</small>
+            </div>
 
-		<section id="overlay" class="config hidden">
-			<h2>Overlay</h2>
-		</section>
+            <div class="form-group">
+              <label for="consecutive-frames">Consecutive Frames</label>
+              <input
+                type="number"
+                id="consecutive-frames"
+                class="form-control"
+                min="1"
+                step="1"
+                value="2"
+                placeholder="2"
+                data-api-field="blink_consec_frames"
+              />
+              <small class="help-text">Frames to register blink</small>
+            </div>
 
-		<section id="user-mgmt" class="config hidden">
-			<h2>User Management</h2>
-		</section>
-	</main>
-	<script src="script.js"></script>
-</body>
+            <div class="form-group">
+              <label for="blinks-verify">Blinks to Verify</label>
+              <input
+                type="number"
+                id="blinks-verify"
+                class="form-control"
+                min="1"
+                step="1"
+                value="2"
+                placeholder="2"
+                data-api-field="blinks_to_verify"
+              />
+              <small class="help-text">Required blinks</small>
+            </div>
+          </div>
+
+          <!-- Column 3: Overlay Settings -->
+          <div class="config-column" data-section="overlay">
+            <h3 class="subsection-title">Overlay Settings</h3>
+
+            <div class="form-group">
+              <label for="font-scale">Font Scale</label>
+              <input
+                type="number"
+                id="font-scale"
+                class="form-control"
+                min="1"
+                step="1"
+                value="2"
+                placeholder="2"
+                data-api-field="font_scale"
+              />
+              <small class="help-text">Text size multiplier</small>
+            </div>
+
+            <div class="form-group">
+              <label for="font-thickness">Font Thickness</label>
+              <input
+                type="number"
+                id="font-thickness"
+                class="form-control"
+                min="1"
+                step="1"
+                value="2"
+                placeholder="2"
+                data-api-field="font_thickness"
+              />
+              <small class="help-text">Text thickness (px)</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="save-section">
+          <button id="save-btn" class="save-btn" type="button">
+            Save Changes
+          </button>
+          <span id="save-status" class="save-status"></span>
+        </div>
+      </section>
+
+      <section id="blink-detection" class="config hidden">
+        <h2>Blink Detection</h2>
+      </section>
+
+      <section id="notifications" class="config hidden">
+        <h2>Notifications</h2>
+      </section>
+
+      <section id="overlay" class="config hidden">
+        <h2>Overlay</h2>
+      </section>
+
+      <section id="user-mgmt" class="config hidden">
+        <div class="users-panel">
+          <div id="users-error" class="users-error users-error--hidden"></div>
+          <div class="users-table">
+            <div class="users-header">
+              <span class="users-cell users-cell--name">Name</span>
+              <span class="users-cell users-cell--access">Access Level</span>
+              <span class="users-cell users-cell--images">Images</span>
+            </div>
+            <!-- Below is where the user rows will be added by JavaScript -->
+            <div id="users-table-body" class="users-body">
+              <div class="users-row users-body-empty">
+                <span class="users-cell users-cell--message">
+					Click the Users tab to load users
+				</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+    <script src="./scripts/config.js"></script>
+    <script src="./scripts/users.js"></script>
+  </body>
 </html>

@@ -2,8 +2,6 @@
 const navBtns = document.querySelectorAll(".nav-btn");
 const configSections = document.querySelectorAll(".config");
 
-console.log("loaded page again");
-
 navBtns.forEach((button) => {
   button.addEventListener("click", () => {
     // find the correct section to show
