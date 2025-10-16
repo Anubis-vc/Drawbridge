@@ -1,189 +1,335 @@
 :root {
-    --sidebar-bg: #101826;
-    --grey: #bbbbbb;
-    --bg: #F5F5F5;
-    --emerald: #55C787ff;
-    --jade: #49AF76ff;
-    --shamrock-green: #3D9765ff;
-    --sea-green: #328054ff;
-    --dartmouth-green: #266843ff;
-    --cal-poly-green: #1A5032ff;
-    --royal-purple: #6c3baa;
-    --neon-orange: #ff5c00;
-    --lavender: #967bb6;
+  --sidebar-bg: #101826;
+  --grey: #bbbbbb;
+  --bg: #f5f5f5;
+  --emerald: #55c787ff;
+  --jade: #49af76ff;
+  --shamrock-green: #3d9765ff;
+  --sea-green: #328054ff;
+  --dartmouth-green: #266843ff;
+  --cal-poly-green: #1a5032ff;
+  --royal-purple: #6c3baa;
+  --neon-orange: #ff5c00;
+  --lavender: #967bb6;
 }
 
 .users-panel {
-    margin-top: 24px;
-    display: flex;
-    flex-direction: column; /* Stack items vertically */
-    gap: 16px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+  gap: 16px;
 }
 
 /* ============================================
    ERROR MESSAGE - Appears above table
    ============================================ */
 .users-error {
-    color: red;
-    font-size: 14px;
-    padding: 12px;
-    background-color: #ffebee;
-    border: 1px solid #ffcdd2;
-    border-radius: 6px;
+  color: red;
+  font-size: 14px;
+  padding: 12px;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 6px;
 }
 
 .users-error--hidden {
-    display: none;
+  display: none;
 }
 
 /* ============================================
    TABLE STRUCTURE
    ============================================ */
 .users-table {
-    border: 1px solid #545454;
-    border-radius: 8px;
-    overflow: hidden; /* Keeps rounded corners clean */
-    background: var(--bg);
+  border: 1px solid #545454;
+  border-radius: 8px;
+  overflow: hidden; /* Keeps rounded corners clean */
+  background: var(--bg);
 }
 
 .users-header {
-    display: grid;
-    grid-template-columns: 2fr 1fr 2fr; /* Name gets 2 parts, Access gets 1, Images gets 2 */
-    align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-    background: var(--bg);
-    font-weight: 600;
-    color: var(--dartmouth-green);
-    border-bottom: 1px solid #e7e7e7;
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr 1fr; /* Name, Access, Images, Actions */
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--bg);
+  font-weight: 600;
+  color: var(--dartmouth-green);
+  border-bottom: 1px solid #e7e7e7;
 }
 
 /* ============================================
    TABLE ROWS
    ============================================ */
 .users-row {
-    display: grid;
-    grid-template-columns: 2fr 1fr 2fr; /* Same column layout as header */
-    align-items: center;
-    gap: 16px;
-    padding: 12px 16px;
-    border-bottom: 1px solid #e7e7e7;
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr 1fr; /* Same column layout as header */
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e7e7e7;
 }
 
 .users-body .users-row:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .users-body-empty {
-    display: grid;
-    grid-template-columns: 1fr;
-    justify-content: center;
-    text-align: center;
-    padding: 24px 16px;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-content: center;
+  text-align: center;
+  padding: 24px 16px;
 }
 
 /* ============================================
    TABLE CELLS
    ============================================ */
 .users-cell {
-    font-size: 14px;
-    color: var(--);
+  font-size: 14px;
+  color: var(--dartmouth-green);
 }
 
 .users-cell--name {
-    font-weight: 500;
+  font-weight: 500;
 }
 
 .users-cell--access {
-    text-align: center;
+  text-align: center;
 }
 
 .users-cell--images {
-    display: block;
+  display: block;
 }
 
 .users-cell--message {
-    text-align: center;
-    width: 100%;
-    font-style: italic;
-    color: #666;
+  text-align: center;
+  width: 100%;
+  font-style: italic;
+  color: #666;
+}
+
+.users-cell--actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
 }
 
 .images-container {
-    display: flex;
-    gap: 8px;
-    align-items: center;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /* ============================================
    DROPDOWN STYLING
    ============================================ */
 .users-cell--images select {
-    flex: 1; /* Take up remaining space */
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    background: white;
-    font-size: 14px;
-    cursor: pointer;
-    transition: border-color 0.2s;
+  flex: 1; /* Take up remaining space */
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
 }
 
 .users-cell--images select:hover:not(:disabled) {
-    border-color: #999;
+  border-color: #999;
 }
 
 .users-cell--images select:focus {
-    outline: none;
-    border-color: var(--cal-poly-green);
-    box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.1);
+  outline: none;
+  border-color: var(--cal-poly-green);
+  box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.1);
 }
 
 .users-cell--images select:disabled {
-    background: #f3f3f3;
-    color: #666;
-    cursor: not-allowed;
+  background: #f3f3f3;
+  color: #666;
+  cursor: not-allowed;
 }
 
 /* ============================================
    DELETE BUTTON STYLING
    ============================================ */
 .delete-image-btn {
-    padding: 8px 16px;
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    white-space: nowrap;
+  padding: 0;
+  color: var(--neon-orange);
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .delete-image-btn:hover:not(:disabled) {
-    background: #c82333;
+  color: #c82333;
 }
 
 .delete-image-btn:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
+  color: #cccccc;
+  cursor: not-allowed;
 }
 
 /* ============================================
    UPLOAD BUTTON STYLING
    ============================================ */
 .upload-image-btn {
-    padding: 8px 16px;
+    padding: 5px 8px;
     background: var(--cal-poly-green);
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 4px;
     font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .upload-image-btn:hover {
     background: var(--dartmouth-green);
+}
+
+/* ============================================
+   Add Users styling
+   ============================================ */
+.add-user-btn {
+  margin-top: 12px;
+  padding: 10px 20px;
+  background: var(--cal-poly-green);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-user-btn:hover {
+  background: var(--dartmouth-green);
+}
+
+/* ============================================
+   DELETE USER BUTTON
+   ============================================ */
+.delete-user-btn {
+  padding: 5px 8px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.delete-user-btn:hover {
+  background: #c82333;
+}
+
+/* ============================================
+   MODAL STYLING
+   ============================================ */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal--hidden {
+  display: none;
+}
+
+.modal-content {
+  background: var(--bg);
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: var(--dartmouth-green);
+}
+
+.modal-content .form-group {
+  margin-bottom: 16px;
+}
+
+.modal-content label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #333;
+}
+
+.modal-content .form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.modal-content .form-control:focus {
+  outline: none;
+  border-color: var(--cal-poly-green);
+  box-shadow: 0 0 0 3px rgba(0, 100, 0, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-primary {
+  background: var(--cal-poly-green);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--dartmouth-green);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
 }

@@ -178,19 +178,58 @@
               <span class="users-cell users-cell--name">Name</span>
               <span class="users-cell users-cell--access">Access Level</span>
               <span class="users-cell users-cell--images">Images</span>
+              <span class="users-cell users-cell--actions">Actions</span>
             </div>
             <!-- Below is where the user rows will be added by JavaScript -->
             <div id="users-table-body" class="users-body">
               <div class="users-row users-body-empty">
                 <span class="users-cell users-cell--message">
-					Click the Users tab to load users
-				</span>
+                  Click the Users tab to load users
+                </span>
               </div>
             </div>
           </div>
         </div>
-      </section>
+        <button id="add-user-btn" class="add-user-btn">Add User</button>
 
+        <!-- User add section -->
+        <div id="add-user-modal" class="modal modal--hidden">
+          <div class="modal-content">
+            <h3>Add New User</h3>
+            <form id="add-user-form">
+              <div class="form-group">
+                <label for="user-name">Name</label>
+                <input
+                  type="text"
+                  id="user-name"
+                  class="form-control"
+                  required
+                  placeholder="Enter user name"
+                />
+              </div>
+              <div class="form-group">
+                <label for="user-access-level">Access Level</label>
+                <select id="user-access-level" class="form-control" required>
+                  <option value="admin">Admin</option>
+                  <option value="family">Family</option>
+                  <option value="friend">Friend</option>
+                  <option value="stranger">Stranger</option>
+                </select>
+              </div>
+              <div class="modal-actions">
+                <button
+                  type="button"
+                  id="cancel-add-user"
+                  class="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button type="submit" class="btn-primary">Add User</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
     </main>
     <script src="./scripts/config.js"></script>
     <script src="./scripts/users.js"></script>
