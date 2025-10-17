@@ -1,6 +1,8 @@
 // code to change the visible section on the page
 const navBtns = document.querySelectorAll(".nav-btn");
 const configSections = document.querySelectorAll(".config");
+console.log(configSections);
+console.log(navBtns);
 
 navBtns.forEach((button) => {
   button.addEventListener("click", () => {
@@ -18,6 +20,7 @@ navBtns.forEach((button) => {
 
     // activate the section that has been clicked
     document.getElementById(targetSection).classList.add("active");
+    console.log(configSections);
   });
 });
 

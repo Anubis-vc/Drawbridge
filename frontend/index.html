@@ -8,14 +8,11 @@
     <link rel="stylesheet" href="./styles/users.css" />
   </head>
   <body>
-    <div id="video-stream">
-      <h1>Video Stream Pending</h1>
-    </div>
-
     <nav id="sidebar">
-      <h2>Configurations</h2>
-      <hr />
-      <button class="nav-btn active" data-section="recognition">
+      <button class="nav-btn active" data-section="video-stream">
+        Video Stream
+      </button>
+      <button class="nav-btn" data-section="recognition">
         Facial Recognition
       </button>
       <button class="nav-btn" data-section="notifications">
@@ -26,7 +23,11 @@
     </nav>
 
     <main>
-      <section id="recognition" class="config active">
+      <section id="video-stream" class="config active">
+        <h1>Video Stream Pending</h1>
+      </section>
+
+      <section id="recognition" class="config">
         <div class="three-column-grid">
           <!-- Column 1: Face Recognition -->
           <div class="config-column" data-section="face_recognition">
@@ -158,19 +159,11 @@
         </div>
       </section>
 
-      <section id="blink-detection" class="config hidden">
-        <h2>Blink Detection</h2>
-      </section>
-
-      <section id="notifications" class="config hidden">
+      <section id="notifications" class="config">
         <h2>Notifications</h2>
       </section>
 
-      <section id="overlay" class="config hidden">
-        <h2>Overlay</h2>
-      </section>
-
-      <section id="user-mgmt" class="config hidden">
+      <section id="user-mgmt" class="config">
         <div class="users-panel">
           <div id="users-error" class="users-error users-error--hidden"></div>
           <div class="users-table">
