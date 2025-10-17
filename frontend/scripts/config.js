@@ -1,8 +1,6 @@
 // code to change the visible section on the page
 const navBtns = document.querySelectorAll(".nav-btn");
 const configSections = document.querySelectorAll(".config");
-console.log(configSections);
-console.log(navBtns);
 
 navBtns.forEach((button) => {
   button.addEventListener("click", () => {
@@ -20,9 +18,63 @@ navBtns.forEach((button) => {
 
     // activate the section that has been clicked
     document.getElementById(targetSection).classList.add("active");
-    console.log(configSections);
   });
 });
+
+// CODE TO RUN ON INITIAL CONFIG LOAD
+const apiBaseUrl = "http://127.0.0.1:8000/config";
+let isLoadingConfig = false;
+let loadedConfig = false;
+
+async function loadConfig() {
+  if (isLoadingConfig || loadedConfig) {
+    return;
+  }
+
+  isLoadingConfig = true;
+  try {
+    const response = await fetch(apiBaseUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch config: ${response.status}`);
+    }
+
+    const configData = await response.json();
+
+    Object.entries(configData).forEach(([sectionName, sectionValues]) => {
+      const column = document.querySelector(
+        `.config-column[data-section="${sectionName}"]`
+      );
+      if (!column) {
+        return;
+      }
+
+      column.querySelectorAll(".form-control").forEach((input) => {
+        const fieldAttr = input.getAttribute("data-api-field");
+        if (!fieldAttr) {
+          return;
+        }
+
+        const fieldKey = fieldAttr.replace(/-/g, "_");
+        const value = sectionValues[fieldKey];
+        if (value === undefined) {
+          return;
+        }
+
+        if (input.type === "checkbox") {
+          input.checked = Boolean(value);
+        } else {
+          input.value = value;
+        }
+      });
+    });
+
+    loadedConfig = true;
+  } catch (error) {
+    console.error("Error loading config:", error);
+  } finally {
+    isLoadingConfig = false;
+  }
+}
 
 // code to handle the config changes
 const changedConfigs = new Set();
@@ -43,7 +95,6 @@ configColumns.forEach((config) => {
 
 // code to handle the saving config changes + api request
 const saveStatus = document.getElementById("save-status");
-const apiBaseUrl = "http://127.0.0.1:8000/config";
 
 saveButton.addEventListener("click", async () => {
   if (saveButton.classList.contains("active")) {
@@ -100,3 +151,5 @@ saveButton.addEventListener("click", async () => {
     }
   }
 });
+
+loadConfig();
