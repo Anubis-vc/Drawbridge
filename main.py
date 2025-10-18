@@ -2,14 +2,15 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.config import router as config_router
 from api.users import router as users_router
+from api.video import router as video_router
 from runtime_services.state import State
 
-
+# have fastapi manage the runtime state class and automatically clean up after use
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     runtime = State()
@@ -30,6 +31,8 @@ allowed_origins = {
     "http://127.0.0.1:5500",
     "http://localhost",
     "http://localhost:5500",
+    "http://127.0.0.1:5501",
+    "http://localhost:5501",
 }
 
 app.add_middleware(
@@ -41,22 +44,7 @@ app.add_middleware(
 )
 app.include_router(users_router, prefix="/users")
 app.include_router(config_router, prefix="/config")
-
-
-def get_runtime() -> State:
-    runtime = getattr(app.state, "runtime", None)
-    if runtime is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Runtime state not initialised",
-        )
-    return runtime
-
-
-@app.post("/video/toggle")
-async def toggle_video(runtime: State = Depends(get_runtime)) -> dict[str, str]:
-    status = await runtime.toggle_video()
-    return {"status": status}
+app.include_router(video_router, prefix="/video")
 
 
 @app.get("/")

@@ -36,9 +36,8 @@ class FaceRecognizer:
                         best_match = user_tuple[0]
                         best_score = score
                         access = user_tuple[1]
-            # changed, now multiple faces will not overwrite each other
-            if best_score > self.similarity_threshold:
-                self.verified = True
+        # changed, now multiple faces will not overwrite the verified check
+        self.verified = best_score > self.similarity_threshold
         return (best_match, best_score, access)
 
     def update_config(self, config):

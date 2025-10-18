@@ -20,6 +20,7 @@ class State:
 
         self._video_task: asyncio.Task | None = None
         self._stop_signal = asyncio.Event()
+        self.latest_frame_buffer = None
 
         config_manager.register_listener(
             "face_recognition", self.face_recognition.update_config
@@ -32,6 +33,9 @@ class State:
 
         self.embedding_manager = EmebeddingManager(db)
         db.register_listener(self.embedding_manager)
+
+    def is_video_running(self) -> bool:
+        return self._video_task is not None
 
     async def start_video(self) -> str:
         if self._video_task and not self._video_task.done():
@@ -48,11 +52,6 @@ class State:
         await self._video_task
         self._video_task = None
         return "Stopped Video"
-
-    async def toggle_video(self) -> str:
-        if self._video_task and not self._video_task.done():
-            return await self.stop_video()
-        return await self.start_video()
 
     async def _run_video_loop(self):
         face_mesh = mp.solutions.face_mesh.FaceMesh(
@@ -138,7 +137,9 @@ class State:
                     self.face_recognition.reset()
                     self.liveness.reset()
 
-                cv2.imshow("Face Detection", frame)
+                # imencode should be lightweight enough on this smaller resolution to run w/o thread
+                _, self.latest_frame_buffer = cv2.imencode(".jpg", frame)
+                # cv2.imshow("Face Detection", frame)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     self._stop_signal.set()
                     break
