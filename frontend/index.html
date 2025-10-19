@@ -6,6 +6,7 @@
     <title>Facial Recognition App</title>
     <link rel="stylesheet" href="./styles/main.css" />
     <link rel="stylesheet" href="./styles/users.css" />
+    <link rel="stylesheet" href="./styles/video.css" />
   </head>
   <body>
     <nav id="sidebar">
@@ -24,7 +25,13 @@
 
     <main>
       <section id="video-stream" class="config active">
-        <h1>Video Stream Pending</h1>
+        <img
+          id="stream-view"
+          class="video-stream__image"
+        />
+        <button id="toggle-stream-btn" type="button" class="btn-primary">
+          Start Stream
+        </button>
       </section>
 
       <section id="recognition" class="config">
@@ -224,6 +231,7 @@
         </div>
       </section>
     </main>
+    <script src="./scripts/video.js"></script>
     <script src="./scripts/config.js"></script>
     <script src="./scripts/users.js"></script>
   </body>

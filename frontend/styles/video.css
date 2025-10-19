@@ -1,0 +1,67 @@
+:root {
+    --sidebar-bg: #101826;
+    --grey: #bbbbbb;
+    --bg: #F5F5F5;
+    --emerald: #55C787ff;
+    --jade: #49AF76ff;
+    --shamrock-green: #3D9765ff;
+    --sea-green: #328054ff;
+    --dartmouth-green: #266843ff;
+    --cal-poly-green: #1A5032ff;
+    --royal-purple: #6c3baa;
+    --neon-orange: #ff5c00;
+    --lavender: #967bb6;
+}
+
+#video-stream.config.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+#toggle-stream-btn {
+  padding: 0.875rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 100ms ease;
+}
+
+#toggle-stream-btn:hover:not(:disabled) {
+  color: var(--cal-poly-green);
+}
+
+#toggle-stream-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.video-stream__image {
+  width: 100%;
+  max-width: 1024px;
+  height: auto;
+  min-height: 480px;
+  background-color: darkgray;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  object-fit: contain;
+}
+
+/* Responsive adjustments */
+@media (max-width: 720px) {
+  #video-stream {
+    padding: 1rem;
+  }
+  
+  .video-stream__image {
+    min-height: 320px;
+    border-radius: 8px;
+  }
+  
+  #toggle-stream-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+}

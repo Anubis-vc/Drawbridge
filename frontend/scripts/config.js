@@ -124,7 +124,15 @@ saveButton.addEventListener("click", async () => {
               "Content-Type": "application/json",
             },
             body: JSON.stringify(data[section]),
-          }).then(res => res.json())
+          }).then(async (res) => {
+            if (!res.ok) {
+              const errorBody = await res.text();
+              throw new Error(
+                `Failed to update ${section}: ${res.status} ${res.statusText} - ${errorBody}`
+              );
+            }
+            return res.json();
+          })
         );
       }
 

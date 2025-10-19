@@ -67,17 +67,6 @@ main {
     height: calc(100vh - 40px);
 }
 
-#video-stream {
-    height: 100%;
-    text-align: center;
-}
-
-#video-stream.config.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .config {
     display: none;
     animation: fade-in 300ms ease;
