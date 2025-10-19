@@ -218,3 +218,5 @@ test/
 *.DS_Store
 *.db
 *config.json
+
+*.vscode
