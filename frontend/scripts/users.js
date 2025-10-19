@@ -161,7 +161,7 @@ async function deleteImage(userId, imageName, dropdown, button) {
     console.error("Failed to delete image", err);
     alert(`Could not delete image. Please try again.`);
   } finally {
-    button.textContent = "Delete";
+    button.textContent = "x";
   }
 }
 
@@ -559,7 +559,7 @@ function addNoImagesOption(select) {
 function createDeleteButton(userId, dropdown) {
   const button = document.createElement("button");
   button.className = "delete-image-btn";
-  button.textContent = "×";
+  button.textContent = "x";
   button.title = "Delete selected image";
   button.disabled = true; // Start disabled until an image is selected
 

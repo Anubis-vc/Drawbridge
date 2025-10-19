@@ -151,3 +151,4 @@ class State:
             face_mesh.close()
             self._stop_signal.set()
             self._video_task = None
+            self.latest_frame_jpg_enc = None
