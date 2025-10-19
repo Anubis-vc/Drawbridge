@@ -4,7 +4,7 @@
 
 ## Demo So Far
 
-[![Demo](https://img.youtube.com/vi/qjVI98kzM5E/maxresdefault.jpg)](https://youtu.be/qjVI98kzM5E)
+[![Demo](https://img.youtube.com/vi/qjVI98kzM5E/0.jpg)](https://youtu.be/qjVI98kzM5E)
 
 ---
 
