@@ -20,7 +20,7 @@ class State:
 
         self._video_task: asyncio.Task | None = None
         self._stop_signal = asyncio.Event()
-        self.latest_frame_buffer = None
+        self.latest_frame_jpg_enc = None
 
         config_manager.register_listener(
             "face_recognition", self.face_recognition.update_config
@@ -138,7 +138,7 @@ class State:
                     self.liveness.reset()
 
                 # imencode should be lightweight enough on this smaller resolution to run w/o thread
-                _, self.latest_frame_buffer = cv2.imencode(".jpg", frame)
+                self.latest_frame_jpg_enc = cv2.imencode(".jpg", frame)
                 # cv2.imshow("Face Detection", frame)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     self._stop_signal.set()

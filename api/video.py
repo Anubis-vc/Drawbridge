@@ -35,12 +35,13 @@ async def video_status(runtime: State = Depends(get_runtime)):
 async def stream_video(runtime: State = Depends(get_runtime)):
     async def frame_generator():
         while runtime.is_video_running():
-            if runtime.latest_frame_buffer:
+            if runtime.latest_frame_jpg_enc:
+                _, buffer = runtime.latest_frame_jpg_enc
                 # Yield as multipart data
                 yield (
                     b"--frame\r\n"
                     b"Content-Type: image/jpeg\r\n\r\n"
-                    + runtime.latest_frame_buffer.tobytes()
+                    + buffer.tobytes()
                     + b"\r\n"
                 )
             await asyncio.sleep(0.03)  # about 30 fps
