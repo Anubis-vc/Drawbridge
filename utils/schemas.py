@@ -69,7 +69,7 @@ class OverlayConfig(BaseModel):
 
     font_scale: float
     font_thickness: int
-    mesh: bool
+    mesh: bool = False
 
 
 class AppConfig(BaseModel):
