@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 class AccessLevel(Enum):
@@ -6,6 +6,11 @@ class AccessLevel(Enum):
     FAMILY = "family"
     FRIEND = "friend"
     STRANGER = "stranger"
+
+
+class DoorControls(StrEnum):
+    OPEN = "OPEN"
+    CLOSE = "CLOSE"
 
 
 class NotificationStatus(Enum):
