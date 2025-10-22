@@ -10,7 +10,7 @@ void setup() {
   Serial.begin(9600);
   servo.attach(SERVO_PIN);  // attaches the servo on pin 9 to the Servo object
   servo.write(0);
-  delay(5000);
+  delay(2000); // wait a few seconds to allow servo to reset to position
 
   Serial.println("Servo is set");
 }
