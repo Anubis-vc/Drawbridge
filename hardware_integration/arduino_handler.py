@@ -56,7 +56,7 @@ class Arduino:
 
     def send_command(self, command: str):
         """Send a string command followed by newline."""
-        msg = (str(command).strip() + "\n").encode("utf-8")
+        msg = (command.strip() + "\n").encode("utf-8")
         self.serial.write(msg)
         print("Sent: ", msg)  # When you add logging just set this to debug
 
@@ -76,3 +76,10 @@ class Arduino:
             print("Exception whle closing serial connection")
         finally:
             self.serial = None
+
+    # Support usage as a context manager
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.close()

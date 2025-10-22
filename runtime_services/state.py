@@ -9,18 +9,26 @@ from face_recognition import FaceRecognizer, Overlay
 from liveness import Blink
 from notifications import NotificationManager
 from runtime_services.embedding_manager import EmebeddingManager
+from hardware_integration.lock_controller import LockController
+from hardware_integration.arduino_handler import Arduino
+from utils.enums import AccessLevel
 
 
 class State:
-    def __init__(self) -> None:
+    def __init__(self, arduino: Arduino | None = None) -> None:
         self.face_recognition = FaceRecognizer()
         self.liveness = Blink()
         self.overlay = Overlay()
         self.notification_manager = NotificationManager()
+        # Inject Arduino if provided; otherwise LockController will create its own
+        self.door = LockController(arduino)
 
         self._video_task: asyncio.Task | None = None
         self._stop_signal = asyncio.Event()
         self.latest_frame_jpg_enc = None
+
+        # variables to debounce for notifications (pending) and door
+        self._door_busy = False
 
         config_manager.register_listener(
             "face_recognition", self.face_recognition.update_config
@@ -33,7 +41,14 @@ class State:
 
         self.embedding_manager = EmebeddingManager(db)
         db.register_listener(self.embedding_manager)
-
+        
+    async def cycle_lock(self):
+        self._door_busy = True
+        self.door.open()
+        await asyncio.sleep(10)
+        self.door.close()
+        await asyncio.sleep(5)
+        
     def is_video_running(self) -> bool:
         return self._video_task is not None
 
@@ -126,12 +141,25 @@ class State:
                             y2,
                         )
 
+                        # TODO: these single services should not be doing checks, move that here
                         self.notification_manager.check_and_send(
                             self.face_recognition.verified,
                             self.liveness.live,
                             name,
                             access_level=access,
                         )
+
+                        if (
+                            not self._door_busy
+                            and self.face_recognition.verified
+                            and self.liveness.live
+                            and (
+                                access == AccessLevel.ADMIN
+                                or access == AccessLevel.FAMILY
+                            )
+                        ):
+                            # run in a task to avoid blocking loop
+                            asyncio.create_task(self.cycle_lock())
 
                 else:  # no face landmarks recognized
                     self.face_recognition.reset()

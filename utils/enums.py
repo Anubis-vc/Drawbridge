@@ -1,7 +1,7 @@
 from enum import Enum, StrEnum
 
 
-class AccessLevel(Enum):
+class AccessLevel(StrEnum):
     ADMIN = "admin"
     FAMILY = "family"
     FRIEND = "friend"

@@ -9,19 +9,22 @@ from api.config import router as config_router
 from api.users import router as users_router
 from api.video import router as video_router
 from runtime_services.state import State
+from hardware_integration.arduino_handler import Arduino
 
-# have fastapi manage the runtime state class and automatically clean up after use
+# have fastapi manage the runtime and arduino state class and automatically clean up after use
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    runtime = State()
-    app.state.runtime = runtime
-    try:
-        yield
-    finally:  # make sure video released properly when app is shut down
-        video_task = runtime._video_task
-        if video_task and not video_task.done():
-            runtime._stop_signal.set()
-            await video_task
+    # Manage Arduino as a context so it opens on startup and closes on shutdown
+    with Arduino() as arduino:
+        runtime = State(arduino=arduino)
+        app.state.runtime = runtime
+        try:
+            yield
+        finally:  # make sure video released properly when app is shut down
+            video_task = runtime._video_task
+            if video_task and not video_task.done():
+                runtime._stop_signal.set()
+                await video_task
 
 
 app = FastAPI(title="Face Recognition Service", lifespan=lifespan)
