@@ -4,27 +4,48 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
 
 from api.config import router as config_router
 from api.users import router as users_router
 from api.video import router as video_router
 from runtime_services.state import State
 from hardware_integration.arduino_handler import Arduino
+from hardware_integration.mock_arduino_handler import MockArduino
+
+from dotenv import load_dotenv
+load_dotenv()
 
 # have fastapi manage the runtime and arduino state class and automatically clean up after use
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Manage Arduino as a context so it opens on startup and closes on shutdown
-    with Arduino() as arduino:
-        runtime = State(arduino=arduino)
-        app.state.runtime = runtime
-        try:
-            yield
-        finally:  # make sure video released properly when app is shut down
-            video_task = runtime._video_task
-            if video_task and not video_task.done():
-                runtime._stop_signal.set()
-                await video_task
+    use_arduino = os.getenv("USE_ARDUINO")
+    
+    # if use_arduino if yes then we have to fail fast if we cannot find it
+    if use_arduino == "YES":
+        with Arduino() as arduino:
+            runtime = State(arduino=arduino)
+            app.state.runtime = runtime
+            try:
+                yield
+            finally: # release the video and wait for it to shut down
+                video_task = runtime._video_task
+                if video_task and not video_task.done():
+                    runtime._stop_signal.set()
+                    await video_task
+    
+    # otherwise use the mock, this is only used for testing when i don't have my setup
+    else:
+        with MockArduino() as arduino:
+            runtime = State(arduino=arduino)
+            app.state.runtime = runtime
+            try:
+                yield
+            finally:
+                video_task = runtime._video_task
+                if video_task and not video_task.done():
+                    runtime._stop_signal.set()
+                    await video_task
 
 
 app = FastAPI(title="Face Recognition Service", lifespan=lifespan)

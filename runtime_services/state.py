@@ -10,12 +10,12 @@ from liveness import Blink
 from notifications import NotificationManager
 from runtime_services.embedding_manager import EmebeddingManager
 from hardware_integration.lock_controller import LockController
-from hardware_integration.arduino_handler import Arduino
+from hardware_integration.arduino import ArduinoLike
 from utils.enums import AccessLevel
 
 
 class State:
-    def __init__(self, arduino: Arduino | None = None) -> None:
+    def __init__(self, arduino: ArduinoLike) -> None:
         self.face_recognition = FaceRecognizer()
         self.liveness = Blink()
         self.overlay = Overlay()
@@ -48,6 +48,7 @@ class State:
         await asyncio.sleep(10)
         self.door.close()
         await asyncio.sleep(5)
+        self._door_busy = False # TODO: is there a better way to control the door cooldown?... always on model?
         
     def is_video_running(self) -> bool:
         return self._video_task is not None
