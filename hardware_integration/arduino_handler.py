@@ -2,8 +2,10 @@ import serial
 import serial.tools.list_ports
 import time
 
+from hardware_integration.arduino import ArduinoLike
 
-class Arduino:
+
+class Arduino(ArduinoLike):
     def __init__(self, baud_rate=9600, retries=3):
         self.baud_rate = baud_rate
         self.retries = retries
