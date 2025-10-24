@@ -2,9 +2,14 @@
 
 > A real-time facial recognition system with liveness detection for access control. Features hot-reloading configuration and a simple web UI for real-time management.
 
-## Demo So Far
+## Demo + Setup
 
-[![Demo](https://img.youtube.com/vi/qjVI98kzM5E/0.jpg)](https://youtu.be/qjVI98kzM5E)
+<p align="left">
+  <a href="https://youtu.be/qjVI98kzM5E">
+    <img src="https://img.youtube.com/vi/qjVI98kzM5E/0.jpg" alt="Demo video" width="25%" />
+  </a>
+  <img src="hardware_integration/images/hardware_setup.JPG" alt="Hardware setup" width="25%" />
+</p>
 
 ---
 
@@ -24,6 +29,13 @@ main.py (FastAPI entrypoint + lifespan management)
 │   ├── embeddings.py       # Helpers for vector math and caching
 │   └── overlay.py          # OpenCV overlay renderer for HUD output
 ├── liveness/              # Eye-blink detection and liveness orchestration
+├── hardware_integration/
+│   ├── arduino.py              # Arduino-like abstract class
+│   ├── arduino_handler.py      # Serial implementation for real hardware
+│   ├── mock_arduino_handler.py # Mock device for development/testing
+│   ├── lock_controller.py      # High-level door lock controller
+│   ├── ServoOperator.ino       # Arduino sketch to drive servo
+│   ├── images/                 # Hardware photo (3d print pending)
 ├── notifications/
 │   ├── notification_manager.py  # Routing + throttling for outbound alerts
 │   ├── email.py / sms.py        # Individual providers
@@ -44,7 +56,26 @@ main.py (FastAPI entrypoint + lifespan management)
 
 ---
 
-## Core Components
+## Hardware
+
+The hardware layer bridges the software’s facial recognition with a physical output.
+It uses an **Arduino Uno**, **Servo**, a **6 V battery pack**, and an **Electrolytic Capacitor** (optional) to physically lock or unlock once a verified face is detected.
+
+## Setup Overview
+- **Power:** A 6 V battery pack powers the servo through a breadboard rail. A 1000 µF electrolytic capacitor smooths sudden current spikes.  
+- **Control:** The servo’s control wire connects to **pin 9** on the Arduino, while power and ground share a common bus with the battery pack.
+- **Grounding:** The Arduino’s ground is tied to the breadboard ground, ensuring stable reference levels between logic and power.
+- **Connection:** The Arduino is powered over USB from my computer for v1, which also handles serial communication with the Python backend.
+
+## Software ↔ Hardware Loop
+1. The backend (`arduino_handler.py`) maintains a serial connection to the Arduino.  
+2. After the facial recognition and liveness check succeed, it sends either `OPEN` or `CLOSE`.  
+3. The Arduino sketch (`ServoOperator.ino`) listens for these messages and drives the servo to the corresponding position (e.g., 0° = locked, 90° = unlocked).  
+4. Status messages are echoed back over Serial for confirmation.
+
+---
+
+## Software
 
 ### Face Recognition
 **Embeddings** — Generating normalized embeddings using InsightFace, and averaging multiple user images to create one unified embedding.
@@ -161,7 +192,7 @@ This is simply the most straightforward option. Again, the complexity of an HLS 
 
 **ordered by priority**
 
-- [ ] Program hardware (3D print clamp and mount for servo motor)
+- [ ] 3D print clamp and mount for servo motor
 - [ ] Test basic end-to-end flow using computer
 - [ ] Train a lightweight wake-word detection system so camera activates only when needed
 - [ ] Add additional liveness checking (speech or IR when hardware allows)

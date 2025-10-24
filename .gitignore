@@ -202,9 +202,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml*.egg-info
 
-*.jpg
-*.png
-
 *_cache
 
 *snippets*
