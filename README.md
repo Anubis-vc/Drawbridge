@@ -194,6 +194,7 @@ This is simply the most straightforward option. Again, the complexity of an HLS 
 
 - [ ] 3D print clamp and mount for servo motor
 - [ ] Test basic end-to-end flow using computer
+- [ ] Consider making recognition more lightweight for Pi
 - [ ] Train a lightweight wake-word detection system so camera activates only when needed
 - [ ] Add additional liveness checking (speech or IR when hardware allows)
 - [ ] Update Python version and implement pure multithreading
